@@ -4,83 +4,75 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"strings"
+	"os"
 
+	"github.com/bufbuild/protocompile/parser"
+	"github.com/bufbuild/protocompile/reporter"
 	"github.com/containerd/ttrpc"
-	"github.com/jhump/protoreflect/desc"
-	"github.com/jhump/protoreflect/desc/protoparse"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/dynamicpb"
 )
 
 func main() {
-	importPaths := []string{"."}
+	// importPaths := []string{"."}
 	filenames := []string{"getresource.proto"}
-	serviceName := "getresource.GetResourceService"
+	serviceName := "GetResourceService"
 	methodName := "GetResource"
 
-	filenames, err := protoparse.ResolveFilenames(importPaths, filenames...)
+	f, err := os.Open(filenames[0])
 	if err != nil {
 		panic(err)
 	}
 
-	protoParser := protoparse.Parser{
-		ImportPaths:           importPaths,
-		InferImportPaths:      len(importPaths) == 0,
-		IncludeSourceCodeInfo: true,
-	}
-
-	fds, err := protoParser.ParseFiles(filenames...)
+	repHandler := reporter.NewHandler(
+		reporter.NewReporter(
+			func(err reporter.ErrorWithPos) error { fmt.Printf(err.Error()); return err },
+			func(ewp reporter.ErrorWithPos) { fmt.Printf(ewp.Error()) },
+		),
+	)
+	ast, err := parser.Parse(filenames[0], f, repHandler)
 	if err != nil {
 		panic(err)
 	}
 
-	ds := make([]protoreflect.Descriptor, len(fds))
-	for i, fd := range fds {
-		ds[i] = fd.Unwrap()
-	}
-
-	for _, d := range ds {
-		fmt.Println(d.FullName())
-	}
-
-	dsource, err := DescriptorSourceFromProtoFiles(importPaths, filenames...)
+	result, err := parser.ResultFromAST(ast, true, repHandler)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(ListMethods(dsource, serviceName))
+	fileDescProto := result.FileDescriptorProto()
 
-	method, err := dsource.FindSymbol(strings.Join([]string{serviceName, methodName}, "."))
+	fileDesc, err := protodesc.NewFile(fileDescProto, nil)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("%T\n", method)
-	methd, ok := method.(*desc.MethodDescriptor)
-	if !ok {
-		panic("not a method")
+	svc := fileDesc.Services().ByName(protoreflect.Name(serviceName))
+	if svc == nil {
+		panic("service with name " + serviceName + " not found")
 	}
+	fmt.Println(svc.FullName())
 
-	reqBytes := []byte(`{"KbcName": "test"}`)
-	req := methd.GetInputType().AsDescriptorProto()
+	mth := svc.Methods().ByName(protoreflect.Name(methodName))
+	if mth == nil {
+		panic("method with name " + methodName + " not found")
+	}
+	fmt.Println(mth.FullName())
 
-	fmt.Println(req.GetName())
-	fmt.Println(req.GetField())
-	err = protojson.UnmarshalOptions{
-		AllowPartial: true,
-	}.Unmarshal(reqBytes, req)
-	if err != nil {
+	req := dynamicpb.NewMessage(mth.Input())
+	resp := dynamicpb.NewMessage(mth.Output())
+
+	reqBytes := []byte(`{"KbcName": "name","KbsUri":"uri","ResourcePath":"path"}`)
+
+	if err := protojson.Unmarshal(reqBytes, req); err != nil {
 		panic(err)
 	}
 
-	resp := methd.GetOutputType().AsProto()
-
-	// meth, ok := method.(protoreflect.MethodDescriptor)
-	// if !ok {
-	// 	panic("not a method")
-	// }
-	// req := dynamicpb.NewMessage(meth.Input())
-	// resp := dynamicpb.NewMessage(meth.Output())
+	fmt.Println(req)
+	if !req.IsValid() {
+		panic("invalid request")
+	}
 
 	con, err := net.Dial("unix", "./ttrpc-test.sock")
 	if err != nil {
