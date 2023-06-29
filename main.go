@@ -16,10 +16,12 @@ import (
 )
 
 func main() {
-	// importPaths := []string{"."}
 	filenames := []string{"getresource.proto"}
+	socket := "./ttrpc-test.sock"
+	packageName := "getresource"
 	serviceName := "GetResourceService"
 	methodName := "GetResource"
+	reqBytes := []byte(`{"KbcName": "name","KbsUri":"uri","ResourcePath":"path"}`)
 
 	f, err := os.Open(filenames[0])
 	if err != nil {
@@ -58,12 +60,14 @@ func main() {
 	if mth == nil {
 		panic("method with name " + methodName + " not found")
 	}
-	fmt.Println(mth.FullName())
+	fmt.Println(mth.FullName()) // getresource.GetResourceService.GetResource
+
+	in := mth.Input()
+	fmt.Println(in.FullName())                    // getresource.GetResourceRequest
+	fmt.Println(in.ParentFile().Package().Name()) // getresource
 
 	req := dynamicpb.NewMessage(mth.Input())
 	resp := dynamicpb.NewMessage(mth.Output())
-
-	reqBytes := []byte(`{"KbcName": "name","KbsUri":"uri","ResourcePath":"path"}`)
 
 	if err := protojson.Unmarshal(reqBytes, req); err != nil {
 		panic(err)
@@ -74,7 +78,7 @@ func main() {
 		panic("invalid request")
 	}
 
-	con, err := net.Dial("unix", "./ttrpc-test.sock")
+	con, err := net.Dial("unix", socket)
 	if err != nil {
 		panic(err)
 	}
@@ -82,7 +86,7 @@ func main() {
 	client := ttrpc.NewClient(con)
 	defer client.Close()
 
-	err = client.Call(context.Background(), serviceName, methodName, req, resp)
+	err = client.Call(context.Background(), packageName+"."+serviceName, methodName, req, resp)
 	if err != nil {
 		panic(err)
 	}
