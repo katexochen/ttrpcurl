@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"strings"
 
 	"github.com/bufbuild/protocompile/parser"
 	"github.com/bufbuild/protocompile/reporter"
@@ -16,6 +17,31 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/dynamicpb"
 )
+
+type MethodIdentifier struct {
+	Package string
+	Service string
+	Method  string
+}
+
+func MethodIdentifierFromFQN(fqn string) (MethodIdentifier, error) {
+	parts := strings.Split(fqn, ".")
+	switch len(parts) {
+	case 3:
+		return MethodIdentifier{
+			Package: parts[0],
+			Service: parts[1],
+			Method:  parts[2],
+		}, nil
+	case 2:
+		return MethodIdentifier{
+			Service: parts[0],
+			Method:  parts[1],
+		}, nil
+	default:
+		return MethodIdentifier{}, fmt.Errorf("failed to parse method identifier: %q isn't a fully qualified name", fqn)
+	}
+}
 
 type ProtoParser struct {
 	reportHandler *reporter.Handler
@@ -48,11 +74,17 @@ func (p *ProtoParser) ParseFile(filename string, r io.Reader) (*descriptorpb.Fil
 	return result.FileDescriptorProto(), nil
 }
 
-func Execute(filename string, socket string, packageName string, serviceName string, methodName string, reqBytes []byte) error {
+func Execute(filename string, socket string, methodFQN string, reqBytes []byte) error {
+	methodID, err := MethodIdentifierFromFQN(methodFQN)
+	if err != nil {
+		return err
+	}
+
 	f, err := os.Open(filename)
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 
 	parser := NewProtoParser()
 	fileDescProto, err := parser.ParseFile(filename, f)
@@ -64,14 +96,14 @@ func Execute(filename string, socket string, packageName string, serviceName str
 	if err != nil {
 		return err
 	}
-	svc := fileDesc.Services().ByName(protoreflect.Name(serviceName))
+	svc := fileDesc.Services().ByName(protoreflect.Name(methodID.Service))
 	if svc == nil {
-		return fmt.Errorf("service with name " + serviceName + " not found")
+		return fmt.Errorf("service with name " + methodID.Service + " not found")
 	}
 
-	mth := svc.Methods().ByName(protoreflect.Name(methodName))
+	mth := svc.Methods().ByName(protoreflect.Name(methodID.Method))
 	if mth == nil {
-		return fmt.Errorf("method with name " + methodName + " not found")
+		return fmt.Errorf("method with name " + methodID.Method + " not found")
 	}
 
 	req := dynamicpb.NewMessage(mth.Input())
@@ -93,7 +125,7 @@ func Execute(filename string, socket string, packageName string, serviceName str
 	client := ttrpc.NewClient(con)
 	defer client.Close()
 
-	err = client.Call(context.Background(), packageName+"."+serviceName, methodName, req, resp)
+	err = client.Call(context.Background(), methodID.Package+"."+methodID.Service, methodID.Method, req, resp)
 	if err != nil {
 		return err
 	}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/katexochen/ttrpcurl"
 	"github.com/spf13/cobra"
@@ -45,15 +44,6 @@ func runRootCmd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("parsing compability flags: %w", err)
 	}
 
-	fullMethName := strings.Split(args[1], ".")
-	if len(fullMethName) != 3 {
-		return fmt.Errorf("invalid method name: %s", args[1])
-	}
-
-	packageName := fullMethName[0]
-	serviceName := fullMethName[1]
-	methodName := fullMethName[2]
-
 	var data []byte
 	if flags.data == "@" {
 		data, err = io.ReadAll(os.Stdin)
@@ -67,9 +57,7 @@ func runRootCmd(cmd *cobra.Command, args []string) error {
 	return ttrpcurl.Execute(
 		flags.proto,
 		args[0],
-		packageName,
-		serviceName,
-		methodName,
+		args[1],
 		data,
 	)
 }
