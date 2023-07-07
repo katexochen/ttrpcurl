@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -65,4 +66,22 @@ func signalContext(ctx context.Context, sig os.Signal) (context.Context, context
 
 func preRunRoot(cmd *cobra.Command, _ []string) {
 	cmd.SilenceUsage = true
+}
+
+func prettify(docString string) string {
+	parts := strings.Split(docString, "\n")
+
+	// cull empty lines and also remove trailing and leading spaces
+	// from each line in the doc string
+	j := 0
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		parts[j] = part
+		j++
+	}
+
+	return strings.Join(parts[:j], "\n")
 }

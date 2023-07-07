@@ -74,12 +74,13 @@ func (p *ProtoParser) ParseFile(filename string, r io.Reader) (*descriptorpb.Fil
 	return result.FileDescriptorProto(), nil
 }
 
-func Execute(filename string, socket string, methodFQN string, reqBytes []byte) error {
+func Execute(protoFileNames []string, socket string, methodFQN string, reqBytes []byte) error {
 	methodID, err := MethodIdentifierFromFQN(methodFQN)
 	if err != nil {
 		return err
 	}
 
+	filename := protoFileNames[0] // only one file for now
 	f, err := os.Open(filename)
 	if err != nil {
 		return err

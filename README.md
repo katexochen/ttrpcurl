@@ -2,9 +2,6 @@
 
 ## POC
 
-- [ ] Fork pflags, try to port to P9 flags, test with replace statement
-- [ ] Replace paths in pflag
-- [ ] Fork cobra, replace paths in cobra
 - [ ] Copy all flags from grpcurl
 - [ ] Structure main logic into structs
 - [ ] Write unit tests
