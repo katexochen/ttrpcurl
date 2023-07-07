@@ -36,3 +36,6 @@ echo "${data}" \
     --data @ \
     /tmp/ttrpc-test.sock \
     getresource.GetResourceService.GetResource
+
+./ttrpcurl describe && exit 1 || true
+./ttrpcurl list && exit 1 || true

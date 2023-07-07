@@ -30,6 +30,11 @@ func run() error {
 
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose output")
 
+	rootCmd.AddCommand(
+		newListCommand(),
+		newDescribeCommand(),
+	)
+
 	rootCmd.Version = version
 	rootCmd.InitDefaultVersionFlag()
 	rootCmd.SetVersionTemplate(
