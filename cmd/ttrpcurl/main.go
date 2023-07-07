@@ -23,6 +23,18 @@ func main() {
 
 func run() error {
 	rootCmd := newRootCmd()
+
+	rootCmd.PersistentPreRun = preRunRoot
+	rootCmd.SetOut(os.Stdout)
+
+	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose output")
+
+	rootCmd.Version = version
+	rootCmd.InitDefaultVersionFlag()
+	rootCmd.SetVersionTemplate(
+		fmt.Sprintf("ttrpcurl - Make ttrpc calls based on a proto file\n\nversion   %s\ncommit    %s\nbuilt at  %s\n", version, commit, date),
+	)
+
 	ctx, cancel := signalContext(context.Background(), os.Interrupt)
 	defer cancel()
 	return rootCmd.ExecuteContext(ctx)

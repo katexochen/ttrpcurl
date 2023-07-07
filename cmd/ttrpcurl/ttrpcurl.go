@@ -14,19 +14,13 @@ func newRootCmd() *cobra.Command {
 	cobra.EnableCommandSorting = false
 
 	rootCmd := &cobra.Command{
-		Use:              "ttrpcurl [flags] <socket> <method>",
-		Short:            "Make ttrpc calls based on a proto file",
-		Version:          version,
-		PersistentPreRun: preRunRoot,
+		Use:   "ttrpcurl [flags] <socket> <method>",
+		Short: "Make ttrpc calls based on a proto file",
 		Args: cobra.MatchAll(
 			cobra.ExactArgs(2),
 		),
 		RunE: runRootCmd,
 	}
-
-	rootCmd.SetOut(os.Stdout)
-
-	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose output")
 
 	rootCmd.Flags().StringP("data", "d", "", "Data to send, @ means read from stdin")
 	rootCmd.Flags().String("format", "json", "Format of data to send")
@@ -38,21 +32,16 @@ func newRootCmd() *cobra.Command {
 	rootCmd.Flags().Bool("plaintext", false, "")
 	rootCmd.Flags().MarkHidden("plaintext")
 
-	rootCmd.InitDefaultVersionFlag()
-	rootCmd.SetVersionTemplate(
-		fmt.Sprintf("ttrpcurl - Make ttrpc calls based on a proto file\n\nversion   %s\ncommit    %s\nbuilt at  %s\n", version, commit, date),
-	)
-
 	return rootCmd
 }
 
 func runRootCmd(cmd *cobra.Command, args []string) error {
-	flags, err := parseFlags(cmd)
+	flags, err := parseRootFlags(cmd)
 	if err != nil {
 		return fmt.Errorf("parse flags: %w", err)
 	}
 
-	if err := warnCompabilityFlags(cmd); err != nil {
+	if err := warnRootCompabilityFlags(cmd); err != nil {
 		return fmt.Errorf("parsing compability flags: %w", err)
 	}
 
@@ -85,32 +74,29 @@ func runRootCmd(cmd *cobra.Command, args []string) error {
 	)
 }
 
-type flags struct {
+type rootFlags struct {
 	verbose bool
 	data    string
 	format  string
 	proto   string
 }
 
-func parseFlags(cmd *cobra.Command) (*flags, error) {
-	f := &flags{}
+func parseRootFlags(cmd *cobra.Command) (*rootFlags, error) {
+	f := &rootFlags{}
 
 	var err error
 	f.verbose, err = cmd.Flags().GetBool("verbose")
 	if err != nil {
 		return nil, err
 	}
-
 	f.data, err = cmd.Flags().GetString("data")
 	if err != nil {
 		return nil, err
 	}
-
 	f.format, err = cmd.Flags().GetString("format")
 	if err != nil {
 		return nil, err
 	}
-
 	f.proto, err = cmd.Flags().GetString("proto")
 	if err != nil {
 		return nil, err
@@ -119,7 +105,7 @@ func parseFlags(cmd *cobra.Command) (*flags, error) {
 	return f, nil
 }
 
-func warnCompabilityFlags(cmd *cobra.Command) error {
+func warnRootCompabilityFlags(cmd *cobra.Command) error {
 	boolFlags := []struct {
 		name    string
 		warning string
