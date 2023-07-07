@@ -21,15 +21,18 @@ sleep 1
 
 go build ../cmd/ttrpcurl
 
+data=$(cat data.json)
+
 ./ttrpcurl \
     --proto getresource.proto \
-    --data data.json \
+    --data "${data}" \
     /tmp/ttrpc-test.sock \
     getresource.GetResourceService.GetResource
 
-cat data.json \
+echo "${data}" \
 | ./ttrpcurl \
     --proto getresource.proto \
+    --plaintext \
     --data @ \
     /tmp/ttrpc-test.sock \
     getresource.GetResourceService.GetResource

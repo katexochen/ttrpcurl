@@ -34,6 +34,10 @@ func newRootCmd() *cobra.Command {
 	// rootCmd.Flags().String("connect-timeout", "10s", "Maximum time allowed for connection")
 	rootCmd.Flags().String("proto", "", "Path to proto file")
 
+	// Unused flags for compability with grpcurl
+	rootCmd.Flags().Bool("plaintext", false, "")
+	rootCmd.Flags().MarkHidden("plaintext")
+
 	rootCmd.InitDefaultVersionFlag()
 	rootCmd.SetVersionTemplate(
 		fmt.Sprintf("ttrpcurl - Make ttrpc calls based on a proto file\n\nversion   %s\ncommit    %s\nbuilt at  %s\n", version, commit, date),
@@ -46,6 +50,10 @@ func runRootCmd(cmd *cobra.Command, args []string) error {
 	flags, err := parseFlags(cmd)
 	if err != nil {
 		return fmt.Errorf("parse flags: %w", err)
+	}
+
+	if err := warnCompabilityFlags(cmd); err != nil {
+		return fmt.Errorf("parsing compability flags: %w", err)
 	}
 
 	fullMethName := strings.Split(args[1], ".")
@@ -64,10 +72,7 @@ func runRootCmd(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("read data from stdin: %w", err)
 		}
 	} else {
-		data, err = os.ReadFile(flags.data)
-		if err != nil {
-			return fmt.Errorf("read data file: %w", err)
-		}
+		data = []byte(flags.data)
 	}
 
 	return ttrpcurl.Execute(
@@ -112,4 +117,25 @@ func parseFlags(cmd *cobra.Command) (*flags, error) {
 	}
 
 	return f, nil
+}
+
+func warnCompabilityFlags(cmd *cobra.Command) error {
+	boolFlags := []struct {
+		name    string
+		warning string
+	}{
+		{"plaintext", "The flag deactivates TLS in grpcurl, but ttrpcurl communicates over a unix domain socket. It doesn't use TCP, so TLS isn't involved per default."},
+	}
+
+	for _, flag := range boolFlags {
+		val, err := cmd.Flags().GetBool(flag.name)
+		if err != nil {
+			return err
+		}
+		if val {
+			fmt.Printf("WARN: flag %s is unused and only provided for compability with grpcurl. %s\n", flag.name, flag.warning)
+		}
+	}
+
+	return nil
 }
