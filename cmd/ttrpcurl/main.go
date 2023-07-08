@@ -28,8 +28,6 @@ func run() error {
 	rootCmd.PersistentPreRun = preRunRoot
 	rootCmd.SetOut(os.Stdout)
 
-	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose output")
-
 	rootCmd.AddCommand(
 		newListCommand(),
 		newDescribeCommand(),

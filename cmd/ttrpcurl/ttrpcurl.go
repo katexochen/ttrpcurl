@@ -22,6 +22,18 @@ func newRootCmd() *cobra.Command {
 		RunE: runRoot,
 	}
 
+	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose output.")
+	rootCmd.PersistentFlags().StringSlice("proto", []string{}, prettify(`
+		The name of a proto source file. Source files given will be used to
+		determine the RPC schema instead of querying for it from the remote
+		server via the gRPC reflection API. When set: the 'list' action lists
+		the services found in the given files and their imports (vs. those
+		exposed by the remote server), and the 'describe' action describes
+		symbols found in the given files. May specify more than one via multiple
+		-proto flags. Imports will be resolved using the given -import-path
+		flags. Multiple proto files can be specified by specifying multiple
+		-proto flags. It is an error to use both -protoset and -proto flags.`))
+
 	rootCmd.Flags().StringP("data", "d", "", prettify(`
 		Data for request contents. If the value is '@' then the request contents
 		are read from stdin. For calls that accept a stream of requests, the
@@ -37,16 +49,6 @@ func newRootCmd() *cobra.Command {
 		ASCII character: 0x1E. The stream should not end in a record separator.
 		If it does, it will be interpreted as a final, blank message after the
 		separator.`))
-	rootCmd.Flags().StringSlice("proto", []string{}, prettify(`
-		The name of a proto source file. Source files given will be used to
-		determine the RPC schema instead of querying for it from the remote
-		server via the gRPC reflection API. When set: the 'list' action lists
-		the services found in the given files and their imports (vs. those
-		exposed by the remote server), and the 'describe' action describes
-		symbols found in the given files. May specify more than one via multiple
-		-proto flags. Imports will be resolved using the given -import-path
-		flags. Multiple proto files can be specified by specifying multiple
-		-proto flags. It is an error to use both -protoset and -proto flags.`))
 	rootCmd.Flags().Bool("allow-unknown-fields", false, prettify(`
 		When true, the request contents, if 'json' format is used, allows
 		unknown fields to be present. They will be ignored when parsing
@@ -103,10 +105,10 @@ func runRoot(cmd *cobra.Command, args []string) error {
 }
 
 type rootFlags struct {
-	verbose            bool // persistent
+	verbose            bool     // persistent
+	proto              []string // persistent
 	data               string
 	format             string
-	proto              []string
 	allowUnknownFields bool
 	connectTimeout     time.Duration
 	formatError        bool

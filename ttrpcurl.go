@@ -14,33 +14,44 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/dynamicpb"
 )
 
-type MethodIdentifier struct {
-	Package string
-	Service string
-	Method  string
+type ServiceIdentifier struct{ string }
+
+func ServiceIdentifierFromFQN(fqn string) (ServiceIdentifier, error) {
+	parts := strings.Split(fqn, ".")
+
+	if len(parts) == 2 {
+		return ServiceIdentifier{fqn}, nil
+	}
+	return ServiceIdentifier{}, fmt.Errorf("%q isn't a fully qualified service name", fqn)
 }
+
+func (si ServiceIdentifier) Package() string {
+	parts := strings.Split(si.string, ".")
+	return parts[0]
+}
+
+func (si ServiceIdentifier) Service() string {
+	parts := strings.Split(si.string, ".")
+	return parts[1]
+}
+
+type MethodIdentifier struct{ ServiceIdentifier }
 
 func MethodIdentifierFromFQN(fqn string) (MethodIdentifier, error) {
 	parts := strings.Split(fqn, ".")
-	switch len(parts) {
-	case 3:
-		return MethodIdentifier{
-			Package: parts[0],
-			Service: parts[1],
-			Method:  parts[2],
-		}, nil
-	case 2:
-		return MethodIdentifier{
-			Service: parts[0],
-			Method:  parts[1],
-		}, nil
-	default:
-		return MethodIdentifier{}, fmt.Errorf("failed to parse method identifier: %q isn't a fully qualified name", fqn)
+
+	if len(parts) == 3 {
+		return MethodIdentifier{ServiceIdentifier{fqn}}, nil
 	}
+	return MethodIdentifier{}, fmt.Errorf("%q isn't a fully qualified method name", fqn)
+}
+
+func (mi MethodIdentifier) Method() string {
+	parts := strings.Split(mi.string, ".")
+	return parts[2]
 }
 
 type ProtoParser struct {
@@ -59,7 +70,7 @@ func NewProtoParser() *ProtoParser {
 	return &ProtoParser{reportHandler: repHandler}
 }
 
-func (p *ProtoParser) ParseFile(filename string, r io.Reader) (*descriptorpb.FileDescriptorProto, error) {
+func (p *ProtoParser) ParseFile(filename string, r io.Reader) (protoreflect.FileDescriptor, error) {
 	ast, err := parser.Parse(filename, r, p.reportHandler)
 	if err != nil {
 		return nil, fmt.Errorf("parsing proto file %q: %w", filename, err)
@@ -71,7 +82,12 @@ func (p *ProtoParser) ParseFile(filename string, r io.Reader) (*descriptorpb.Fil
 		return nil, fmt.Errorf("getting result from AST: %w", err)
 	}
 
-	return result.FileDescriptorProto(), nil
+	fileDesc, err := protodesc.NewFile(result.FileDescriptorProto(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("creating file descriptor: %w", err)
+	}
+
+	return fileDesc, nil
 }
 
 func Execute(protoFileNames []string, socket string, methodFQN string, reqBytes []byte) error {
@@ -88,23 +104,19 @@ func Execute(protoFileNames []string, socket string, methodFQN string, reqBytes 
 	defer f.Close()
 
 	parser := NewProtoParser()
-	fileDescProto, err := parser.ParseFile(filename, f)
+	fileDesc, err := parser.ParseFile(filename, f)
 	if err != nil {
 		return err
 	}
 
-	fileDesc, err := protodesc.NewFile(fileDescProto, nil)
-	if err != nil {
-		return err
-	}
-	svc := fileDesc.Services().ByName(protoreflect.Name(methodID.Service))
+	svc := fileDesc.Services().ByName(protoreflect.Name(methodID.Service()))
 	if svc == nil {
-		return fmt.Errorf("service with name " + methodID.Service + " not found")
+		return fmt.Errorf("service with name " + methodID.Service() + " not found")
 	}
 
-	mth := svc.Methods().ByName(protoreflect.Name(methodID.Method))
+	mth := svc.Methods().ByName(protoreflect.Name(methodID.Method()))
 	if mth == nil {
-		return fmt.Errorf("method with name " + methodID.Method + " not found")
+		return fmt.Errorf("method with name " + methodID.Method() + " not found")
 	}
 
 	req := dynamicpb.NewMessage(mth.Input())
@@ -126,7 +138,7 @@ func Execute(protoFileNames []string, socket string, methodFQN string, reqBytes 
 	client := ttrpc.NewClient(con)
 	defer client.Close()
 
-	err = client.Call(context.Background(), methodID.Package+"."+methodID.Service, methodID.Method, req, resp)
+	err = client.Call(context.Background(), methodID.Package()+"."+methodID.Service(), methodID.Method(), req, resp)
 	if err != nil {
 		return err
 	}
