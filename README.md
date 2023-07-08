@@ -2,7 +2,6 @@
 
 ## POC
 
-- [ ] Copy all flags from grpcurl
 - [ ] Structure main logic into structs
 - [ ] Write unit tests
 - [ ] Write testscript tests

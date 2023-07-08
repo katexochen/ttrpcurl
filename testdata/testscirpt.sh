@@ -32,7 +32,6 @@ data=$(cat data.json)
 echo "${data}" \
 | ./ttrpcurl \
     --proto getresource.proto \
-    --plaintext \
     --data @ \
     /tmp/ttrpc-test.sock \
     getresource.GetResourceService.GetResource

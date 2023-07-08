@@ -70,44 +70,15 @@ func newRootCmd() *cobra.Command {
 	// 	When describing messages, show a template of input data.`))
 
 	// Unused flags, might be implemented in the future
-	rootCmd.Flags().StringSlice("protoset", nil, "")
-	rootCmd.Flags().MarkHidden("protoset")
-	rootCmd.Flags().StringSlice("import-path", nil, "")
-	rootCmd.Flags().MarkHidden("import-path")
-	rootCmd.Flags().Bool("use-reflection", false, "")
-	rootCmd.Flags().MarkHidden("use-reflection")
-	rootCmd.Flags().StringP("add-header", "H", "", "")
-	rootCmd.Flags().MarkHidden("add-headers")
-	rootCmd.Flags().String("rpc-header", "", "")
-	rootCmd.Flags().MarkHidden("rpc-header")
-	rootCmd.Flags().String("reflect-header", "", "")
-	rootCmd.Flags().MarkHidden("reflect-header")
-	rootCmd.Flags().Bool("expand-headers", false, "")
-	rootCmd.Flags().MarkHidden("expand-headers")
-	rootCmd.Flags().String("protoset-out", "", "")
-	rootCmd.Flags().MarkHidden("protoset-out")
-	rootCmd.Flags().Bool("reflection", false, "")
-	rootCmd.Flags().MarkHidden("reflection")
-
-	// Unused flags for compability with grpcurl
-	rootCmd.Flags().Bool("plaintext", false, "")
-	rootCmd.Flags().MarkHidden("plaintext")
-	rootCmd.Flags().Bool("insecure", false, "")
-	rootCmd.Flags().MarkHidden("insecure")
-	rootCmd.Flags().Bool("cacert", false, "")
-	rootCmd.Flags().MarkHidden("cacert")
-	rootCmd.Flags().Bool("cert", false, "")
-	rootCmd.Flags().MarkHidden("cert")
-	rootCmd.Flags().Bool("key", false, "")
-	rootCmd.Flags().MarkHidden("key")
-	rootCmd.Flags().String("authority", "", "")
-	rootCmd.Flags().MarkHidden("authority")
-	rootCmd.Flags().String("user-agent", "", "")
-	rootCmd.Flags().MarkHidden("user-agent")
-	rootCmd.Flags().Duration("keepalive-time", 0, "")
-	rootCmd.Flags().MarkHidden("keepalive-time")
-	rootCmd.Flags().String("servername", "", "")
-	rootCmd.Flags().MarkHidden("servername")
+	// rootCmd.Flags().StringSlice("protoset", nil, "")
+	// rootCmd.Flags().StringSlice("import-path", nil, "")
+	// rootCmd.Flags().Bool("use-reflection", false, "")
+	// rootCmd.Flags().StringP("add-header", "H", "", "")
+	// rootCmd.Flags().String("rpc-header", "", "")
+	// rootCmd.Flags().String("reflect-header", "", "")
+	// rootCmd.Flags().Bool("expand-headers", false, "")
+	// rootCmd.Flags().String("protoset-out", "", "")
+	// rootCmd.Flags().Bool("reflection", false, "")
 
 	return rootCmd
 }
@@ -116,10 +87,6 @@ func runRoot(cmd *cobra.Command, args []string) error {
 	flags, err := parseRootFlags(cmd)
 	if err != nil {
 		return fmt.Errorf("parse flags: %w", err)
-	}
-
-	if err := warnRootCompabilityFlags(cmd); err != nil {
-		return fmt.Errorf("parsing compability flags: %w", err)
 	}
 
 	var data []byte
@@ -198,29 +165,4 @@ func parseRootFlags(cmd *cobra.Command) (*rootFlags, error) {
 	}
 
 	return f, nil
-}
-
-func warnRootCompabilityFlags(cmd *cobra.Command) error {
-	compFlags := []struct {
-		name    string
-		warning string
-	}{
-		{"plaintext", "The flag deactivates TLS in grpcurl, but ttrpcurl communicates over a unix domain socket. It never uses TLS."},
-		{"insecure", ""},
-		{"cacert", ""},
-		{"cert", ""},
-		{"key", ""},
-		{"authority", ""},
-		{"user-agent", ""},
-		{"keepalive-time", ""},
-		{"servername", ""},
-	}
-
-	for _, flag := range compFlags {
-		if cmd.Flags().Changed(flag.name) {
-			fmt.Printf("WARN: flag %s is unused and only provided for compability with grpcurl. %s\n", flag.name, flag.warning)
-		}
-	}
-
-	return nil
 }
