@@ -1,6 +1,6 @@
-# ttrpcurl
+# ttRPCurl
 
-## POC
+## TODOs
 
 - [ ] Structure main logic into structs
 - [ ] Write unit tests
@@ -8,15 +8,10 @@
 - [ ] Write e2e tests
 - [ ] Add CI workflows
 - [ ] Add Goreleaser
-
-## MVP
-
 - [ ] Add describe command
 - [ ] Add list command
 - [ ] Add basic features of grpcurl
-
-## Future
-
-- [ ] Check for ttrpc reflection support
 - [ ] Support streaming calls
 - [ ] Support bidirectional streaming calls
+
+## Limitations
