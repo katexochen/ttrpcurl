@@ -26,7 +26,7 @@ func run() error {
 	rootCmd := newRootCmd()
 
 	rootCmd.PersistentPreRun = preRunRoot
-	rootCmd.SetOut(os.Stdout)
+	rootCmd.SetOut(os.Stderr)
 
 	rootCmd.AddCommand(
 		newListCommand(),

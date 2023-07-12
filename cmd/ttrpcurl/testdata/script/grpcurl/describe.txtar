@@ -1,0 +1,163 @@
+# describe
+exec ttrpcurl --proto product.proto describe
+cmp stdout product.services.out
+! stderr .+
+
+# describe product.GetProductService
+exec ttrpcurl --proto product.proto describe product.GetProductService
+cmp stdout product.GetProductService.out
+! stderr .+
+
+# describe product.GetAdminsService
+exec ttrpcurl --proto product.proto describe product.GetAdminsService
+cmp stdout product.GetAdminsService.out
+! stderr .+
+
+# describe product.GetProductRequest
+exec ttrpcurl --proto product.proto describe product.GetProductRequest
+cmp stdout product.GetProductRequest.out
+! stderr .+
+
+# describe product.GetProductResponse
+exec ttrpcurl --proto product.proto describe product.GetProductResponse
+cmp stdout product.GetProductResponse.out
+! stderr .+
+
+# describe product.GetProductsRequest
+exec ttrpcurl --proto product.proto describe product.GetProductsRequest
+cmp stdout product.GetProductsRequest.out
+! stderr .+
+
+# describe product.GetProductsResponse
+exec ttrpcurl --proto product.proto describe product.GetProductsResponse
+cmp stdout product.GetProductsResponse.out
+! stderr .+
+
+# describe product.GetProductRequest.Name
+exec ttrpcurl --proto product.proto describe product.GetProductRequest.Name
+cmp stdout product.GetProductRequest.Name.out
+! stderr .+
+
+# describe product.GetProductResponse.Product
+exec ttrpcurl --proto product.proto describe product.GetProductResponse.Product
+cmp stdout product.GetProductResponse.Product.out
+! stderr .+
+
+# describe product.GetProductResponse.Name
+exec ttrpcurl --proto product.proto describe product.GetProductResponse.Name
+cmp stdout product.GetProductResponse.Name.out
+! stderr .+
+
+# describe product.GetProductResponse.Price
+exec ttrpcurl --proto product.proto describe product.GetProductResponse.Price
+cmp stdout product.GetProductResponse.Price.out
+! stderr .+
+
+# describe product.GetProductService.GetProduct
+exec ttrpcurl --proto product.proto describe product.GetProductService.GetProduct
+cmp stdout product.GetProductService.GetProduct.out
+! stderr .+
+
+# describe product.GetProductService.GetProducts
+exec ttrpcurl --proto product.proto describe product.GetProductService.GetProducts
+cmp stdout product.GetProductService.GetProducts.out
+! stderr .+
+
+-- product.proto --
+syntax = "proto3";
+
+package product;
+
+message GetProductRequest {
+    string Name = 1;
+}
+
+message GetProductResponse {
+    bytes Product = 1;
+    string Name = 2;
+    int64 Price = 3;
+}
+
+message GetProductsRequest {
+    repeated string Names = 1;
+}
+
+message GetProductsResponse {
+    repeated int64 Prices = 1;
+}
+
+service GetProductService {
+    rpc GetProduct(GetProductRequest) returns (GetProductResponse) {};
+    rpc GetProducts(GetProductsRequest) returns (GetProductsResponse) {};
+}
+
+message GetAdminsRequest {}
+
+message GetAdminsResponse {
+    repeated string Admins = 1;
+}
+
+service GetAdminsService {
+    rpc GetAdmins(GetAdminsRequest) returns (GetAdminsResponse) {};
+}
+-- product.services.out --
+product.GetProductService is a service:
+service GetProductService {
+  rpc GetProduct ( .product.GetProductRequest ) returns ( .product.GetProductResponse );
+  rpc GetProducts ( .product.GetProductsRequest ) returns ( .product.GetProductsResponse );
+}
+product.GetAdminsService is a service:
+service GetAdminsService {
+  rpc GetAdmins ( .product.GetAdminsRequest ) returns ( .product.GetAdminsResponse );
+}
+-- product.GetProductService.out --
+product.GetProductService is a service:
+service GetProductService {
+  rpc GetProduct ( .product.GetProductRequest ) returns ( .product.GetProductResponse );
+  rpc GetProducts ( .product.GetProductsRequest ) returns ( .product.GetProductsResponse );
+}
+-- product.GetAdminsService.out --
+product.GetAdminsService is a service:
+service GetAdminsService {
+  rpc GetAdmins ( .product.GetAdminsRequest ) returns ( .product.GetAdminsResponse );
+}
+-- product.GetProductRequest.out --
+product.GetProductRequest is a message:
+message GetProductRequest {
+  string Name = 1;
+}
+-- product.GetProductResponse.out --
+product.GetProductResponse is a message:
+message GetProductResponse {
+  bytes Product = 1;
+  string Name = 2;
+  int64 Price = 3;
+}
+-- product.GetProductsRequest.out --
+product.GetProductsRequest is a message:
+message GetProductsRequest {
+  repeated string Names = 1;
+}
+-- product.GetProductsResponse.out --
+product.GetProductsResponse is a message:
+message GetProductsResponse {
+  repeated int64 Prices = 1;
+}
+-- product.GetProductService.GetProduct.out --
+product.GetProductService.GetProduct is a method:
+rpc GetProduct ( .product.GetProductRequest ) returns ( .product.GetProductResponse );
+-- product.GetProductService.GetProducts.out --
+product.GetProductService.GetProducts is a method:
+rpc GetProducts ( .product.GetProductsRequest ) returns ( .product.GetProductsResponse );
+-- product.GetProductRequest.Name.out --
+product.GetProductRequest.Name is a field:
+string Name = 1;
+-- product.GetProductResponse.Product.out --
+product.GetProductResponse.Product is a field:
+bytes Product = 1;
+-- product.GetProductResponse.Name.out --
+product.GetProductResponse.Name is a field:
+string Name = 2;
+-- product.GetProductResponse.Price.out --
+product.GetProductResponse.Price is a field:
+int64 Price = 3;

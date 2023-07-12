@@ -1,0 +1,7 @@
+# check grpcurl is used for update
+[update] exec ttrpcurl --help
+[update] stderr grpcurl
+
+# check ttrpcurl is used for !update
+[!update] exec ttrpcurl --help
+[!update] stderr ttrpcurl

@@ -8,7 +8,6 @@ import (
 	"github.com/jhump/protoreflect/desc/protoprint"
 	"github.com/katexochen/ttrpcurl"
 	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 func newDescribeCommand() *cobra.Command {
@@ -25,12 +24,12 @@ func newDescribeCommand() *cobra.Command {
 func runDescribe(cmd *cobra.Command, args []string) error {
 	flags, err := parseDescribeFlags(cmd)
 	if err != nil {
-		return fmt.Errorf("parse flags: %w", err)
+		return fmt.Errorf("parsing flags: %w", err)
 	}
 
 	f, err := os.Open(flags.proto[0])
 	if err != nil {
-		return fmt.Errorf("open proto file: %w", err)
+		return fmt.Errorf("opening proto file: %w", err)
 	}
 	defer f.Close()
 
@@ -38,7 +37,7 @@ func runDescribe(cmd *cobra.Command, args []string) error {
 
 	fileDesc, err := parser.ParseFile(flags.proto[0], f)
 	if err != nil {
-		return fmt.Errorf("parse proto file: %w", err)
+		return fmt.Errorf("parsing proto file: %w", err)
 	}
 
 	printer := &protoprint.Printer{
@@ -48,51 +47,42 @@ func runDescribe(cmd *cobra.Command, args []string) error {
 		ForceFullyQualifiedNames: true,
 	}
 
+	file, err := desc.WrapFile(fileDesc)
+	if err != nil {
+		return fmt.Errorf("wrapping file descriptor: %w", err)
+	}
+
 	switch len(args) {
 	case 0:
-		for i := 0; i < fileDesc.Services().Len(); i++ {
-			svc := fileDesc.Services().Get(i)
-			fmt.Printf("%s is a service:\n", svc.FullName())
-
-			wrappedSvc, err := desc.WrapDescriptor(svc)
+		services := file.GetServices()
+		for _, svc := range services {
+			proroSnip, err := printer.PrintProtoToString(svc)
 			if err != nil {
-				return fmt.Errorf("wrap descriptor: %w", err)
+				return fmt.Errorf("printing proto to string: %w", err)
 			}
 
-			txt, err := printer.PrintProtoToString(wrappedSvc)
-			if err != nil {
-				return fmt.Errorf("print proto to string: %w", err)
-			}
-
-			fmt.Println(txt)
+			fmt.Printf("%s is a service:\n", svc.GetFullyQualifiedName())
+			fmt.Printf(proroSnip)
 		}
-
 		return nil
 	case 1:
-		serviceID, err := ttrpcurl.ServiceIdentifierFromFQN(args[0])
+		symbol := file.FindSymbol(args[0])
+		if symbol == nil {
+			return fmt.Errorf("symbol %q not found", args[0])
+		}
+
+		symbolType, err := descriptorTypeStr(symbol)
 		if err != nil {
-			return fmt.Errorf("parse service identifier: %w", err)
+			return fmt.Errorf("getting descriptor type: %w", err)
 		}
 
-		svc := fileDesc.Services().ByName(protoreflect.Name(serviceID.Service()))
-		if svc == nil {
-			return fmt.Errorf("service %q not found", args[0])
-		}
-
-		fmt.Printf("%s is a service:\n", svc.FullName())
-
-		wrappedSvc, err := desc.WrapDescriptor(svc)
+		proroSnip, err := printer.PrintProtoToString(symbol)
 		if err != nil {
-			return fmt.Errorf("wrap descriptor: %w", err)
+			return fmt.Errorf("printing proto to string: %w", err)
 		}
 
-		txt, err := printer.PrintProtoToString(wrappedSvc)
-		if err != nil {
-			return fmt.Errorf("print proto to string: %w", err)
-		}
-
-		fmt.Println(txt)
-
+		fmt.Printf("%s is a %s:\n", symbol.GetFullyQualifiedName(), symbolType)
+		fmt.Printf(proroSnip)
 		return nil
 	default:
 		return fmt.Errorf("too many arguments")
@@ -118,4 +108,21 @@ func parseDescribeFlags(cmd *cobra.Command) (*describeFlags, error) {
 	}
 
 	return f, nil
+}
+
+func descriptorTypeStr(d desc.Descriptor) (string, error) {
+	switch d.(type) {
+	case *desc.MessageDescriptor:
+		return "message", nil
+	case *desc.EnumDescriptor:
+		return "enum", nil
+	case *desc.ServiceDescriptor:
+		return "service", nil
+	case *desc.MethodDescriptor:
+		return "method", nil
+	case *desc.FieldDescriptor:
+		return "field", nil
+	default:
+		return "", fmt.Errorf("unknown descriptor type: %T", d)
+	}
 }

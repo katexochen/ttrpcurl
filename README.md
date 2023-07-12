@@ -4,7 +4,6 @@
 
 - [ ] Structure main logic into structs
 - [ ] Write unit tests
-- [ ] Write testscript tests
 - [ ] Write e2e tests
 - [ ] Add CI workflows
 - [ ] Add Goreleaser
@@ -15,3 +14,5 @@
 - [ ] Support bidirectional streaming calls
 
 ## Limitations
+
+- Describe doesn't print comments from proto source.
