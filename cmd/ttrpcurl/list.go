@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"sort"
 
+	"github.com/jhump/protoreflect/desc"
 	"github.com/katexochen/ttrpcurl"
 	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 func newListCommand() *cobra.Command {
@@ -28,7 +29,7 @@ func runList(cmd *cobra.Command, args []string) error {
 
 	f, err := os.Open(flags.proto[0])
 	if err != nil {
-		return fmt.Errorf("open proto file: %w", err)
+		return fmt.Errorf("opening proto file: %w", err)
 	}
 	defer f.Close()
 
@@ -36,31 +37,38 @@ func runList(cmd *cobra.Command, args []string) error {
 
 	fileDesc, err := parser.ParseFile(flags.proto[0], f)
 	if err != nil {
-		return fmt.Errorf("parse proto file: %w", err)
+		return fmt.Errorf("parsing proto file: %w", err)
+	}
+
+	file, err := desc.WrapFile(fileDesc)
+	if err != nil {
+		return fmt.Errorf("wrapping file descriptor: %w", err)
 	}
 
 	switch len(args) {
 	case 0:
-		for i := 0; i < fileDesc.Services().Len(); i++ {
-			fmt.Println(fileDesc.Services().Get(i).FullName())
+		var svcNames []string
+		for _, svc := range file.GetServices() {
+			svcNames = append(svcNames, svc.GetFullyQualifiedName())
 		}
-
+		sort.Strings(svcNames)
+		for _, svcName := range svcNames {
+			fmt.Println(svcName)
+		}
 		return nil
 	case 1:
-		serviceID, err := ttrpcurl.ServiceIdentifierFromFQN(args[0])
-		if err != nil {
-			return fmt.Errorf("parse service identifier: %w", err)
-		}
-
-		serviceDesc := fileDesc.Services().ByName(protoreflect.Name(serviceID.Service()))
-		if serviceDesc == nil {
+		svc := file.FindService(args[0])
+		if svc == nil {
 			return fmt.Errorf("service %q not found", args[0])
 		}
-
-		for i := 0; i < serviceDesc.Methods().Len(); i++ {
-			fmt.Println(serviceDesc.Methods().Get(i).FullName())
+		var methodNames []string
+		for _, method := range svc.GetMethods() {
+			methodNames = append(methodNames, method.GetFullyQualifiedName())
 		}
-
+		sort.Strings(methodNames)
+		for _, methodName := range methodNames {
+			fmt.Println(methodName)
+		}
 		return nil
 	default:
 		return fmt.Errorf("too many arguments")

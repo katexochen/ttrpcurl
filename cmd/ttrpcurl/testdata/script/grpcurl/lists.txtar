@@ -1,0 +1,60 @@
+# list services
+exec ttrpcurl --proto product.proto list
+cmp stdout product.list.out
+! stderr .+
+
+# list methods product.GetProductService
+exec ttrpcurl --proto product.proto list product.ProductService
+cmp stdout product.list.product.GetProductService.out
+! stderr .+
+
+# list methods product.AdminsService
+exec ttrpcurl --proto product.proto list product.AdminsService
+cmp stdout product.list.product.AdminsService.out
+! stderr .+
+
+-- product.proto --
+syntax = "proto3";
+
+package product;
+
+message GetProductRequest {
+    string Name = 1;
+}
+
+message GetProductResponse {
+    bytes Product = 1;
+    string Name = 2;
+    int64 Price = 3;
+}
+
+message GetProductsRequest {
+    repeated string Names = 1;
+}
+
+message GetProductsResponse {
+    repeated int64 Prices = 1;
+}
+
+service ProductService {
+    rpc GetProduct(GetProductRequest) returns (GetProductResponse) {};
+    rpc GetProducts(GetProductsRequest) returns (GetProductsResponse) {};
+}
+
+message GetAdminsRequest {}
+
+message GetAdminsResponse {
+    repeated string Admins = 1;
+}
+
+service AdminsService {
+    rpc GetAdmins(GetAdminsRequest) returns (GetAdminsResponse) {};
+}
+-- product.list.out --
+product.AdminsService
+product.ProductService
+-- product.list.product.GetProductService.out --
+product.ProductService.GetProduct
+product.ProductService.GetProducts
+-- product.list.product.AdminsService.out --
+product.AdminsService.GetAdmins

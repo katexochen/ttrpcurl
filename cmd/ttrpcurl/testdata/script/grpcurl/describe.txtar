@@ -1,66 +1,66 @@
-# describe
+# describe services
 exec ttrpcurl --proto product.proto describe
 cmp stdout product.services.out
 ! stderr .+
 
-# describe product.GetProductService
-exec ttrpcurl --proto product.proto describe product.GetProductService
-cmp stdout product.GetProductService.out
+# describe service product.ProductService
+exec ttrpcurl --proto product.proto describe product.ProductService
+cmp stdout product.ProductService.out
 ! stderr .+
 
-# describe product.GetAdminsService
-exec ttrpcurl --proto product.proto describe product.GetAdminsService
-cmp stdout product.GetAdminsService.out
+# describe service product.AdminsService
+exec ttrpcurl --proto product.proto describe product.AdminsService
+cmp stdout product.AdminsService.out
 ! stderr .+
 
-# describe product.GetProductRequest
+# describe request product.GetProductRequest
 exec ttrpcurl --proto product.proto describe product.GetProductRequest
 cmp stdout product.GetProductRequest.out
 ! stderr .+
 
-# describe product.GetProductResponse
+# describe request product.GetProductResponse
 exec ttrpcurl --proto product.proto describe product.GetProductResponse
 cmp stdout product.GetProductResponse.out
 ! stderr .+
 
-# describe product.GetProductsRequest
+# describe request product.GetProductsRequest
 exec ttrpcurl --proto product.proto describe product.GetProductsRequest
 cmp stdout product.GetProductsRequest.out
 ! stderr .+
 
-# describe product.GetProductsResponse
+# describe request product.GetProductsResponse
 exec ttrpcurl --proto product.proto describe product.GetProductsResponse
 cmp stdout product.GetProductsResponse.out
 ! stderr .+
 
-# describe product.GetProductRequest.Name
+# describe field product.GetProductRequest.Name
 exec ttrpcurl --proto product.proto describe product.GetProductRequest.Name
 cmp stdout product.GetProductRequest.Name.out
 ! stderr .+
 
-# describe product.GetProductResponse.Product
+# describe field product.GetProductResponse.Product
 exec ttrpcurl --proto product.proto describe product.GetProductResponse.Product
 cmp stdout product.GetProductResponse.Product.out
 ! stderr .+
 
-# describe product.GetProductResponse.Name
+# describe field product.GetProductResponse.Name
 exec ttrpcurl --proto product.proto describe product.GetProductResponse.Name
 cmp stdout product.GetProductResponse.Name.out
 ! stderr .+
 
-# describe product.GetProductResponse.Price
+# describe field product.GetProductResponse.Price
 exec ttrpcurl --proto product.proto describe product.GetProductResponse.Price
 cmp stdout product.GetProductResponse.Price.out
 ! stderr .+
 
-# describe product.GetProductService.GetProduct
-exec ttrpcurl --proto product.proto describe product.GetProductService.GetProduct
-cmp stdout product.GetProductService.GetProduct.out
+# describe method product.ProductService.GetProduct
+exec ttrpcurl --proto product.proto describe product.ProductService.GetProduct
+cmp stdout product.ProductService.GetProduct.out
 ! stderr .+
 
-# describe product.GetProductService.GetProducts
-exec ttrpcurl --proto product.proto describe product.GetProductService.GetProducts
-cmp stdout product.GetProductService.GetProducts.out
+# describe method product.ProductService.GetProducts
+exec ttrpcurl --proto product.proto describe product.ProductService.GetProducts
+cmp stdout product.ProductService.GetProducts.out
 ! stderr .+
 
 -- product.proto --
@@ -86,7 +86,7 @@ message GetProductsResponse {
     repeated int64 Prices = 1;
 }
 
-service GetProductService {
+service ProductService {
     rpc GetProduct(GetProductRequest) returns (GetProductResponse) {};
     rpc GetProducts(GetProductsRequest) returns (GetProductsResponse) {};
 }
@@ -97,28 +97,28 @@ message GetAdminsResponse {
     repeated string Admins = 1;
 }
 
-service GetAdminsService {
+service AdminsService {
     rpc GetAdmins(GetAdminsRequest) returns (GetAdminsResponse) {};
 }
 -- product.services.out --
-product.GetProductService is a service:
-service GetProductService {
+product.ProductService is a service:
+service ProductService {
   rpc GetProduct ( .product.GetProductRequest ) returns ( .product.GetProductResponse );
   rpc GetProducts ( .product.GetProductsRequest ) returns ( .product.GetProductsResponse );
 }
-product.GetAdminsService is a service:
-service GetAdminsService {
+product.AdminsService is a service:
+service AdminsService {
   rpc GetAdmins ( .product.GetAdminsRequest ) returns ( .product.GetAdminsResponse );
 }
--- product.GetProductService.out --
-product.GetProductService is a service:
-service GetProductService {
+-- product.ProductService.out --
+product.ProductService is a service:
+service ProductService {
   rpc GetProduct ( .product.GetProductRequest ) returns ( .product.GetProductResponse );
   rpc GetProducts ( .product.GetProductsRequest ) returns ( .product.GetProductsResponse );
 }
--- product.GetAdminsService.out --
-product.GetAdminsService is a service:
-service GetAdminsService {
+-- product.AdminsService.out --
+product.AdminsService is a service:
+service AdminsService {
   rpc GetAdmins ( .product.GetAdminsRequest ) returns ( .product.GetAdminsResponse );
 }
 -- product.GetProductRequest.out --
@@ -143,11 +143,11 @@ product.GetProductsResponse is a message:
 message GetProductsResponse {
   repeated int64 Prices = 1;
 }
--- product.GetProductService.GetProduct.out --
-product.GetProductService.GetProduct is a method:
+-- product.ProductService.GetProduct.out --
+product.ProductService.GetProduct is a method:
 rpc GetProduct ( .product.GetProductRequest ) returns ( .product.GetProductResponse );
--- product.GetProductService.GetProducts.out --
-product.GetProductService.GetProducts is a method:
+-- product.ProductService.GetProducts.out --
+product.ProductService.GetProducts is a method:
 rpc GetProducts ( .product.GetProductsRequest ) returns ( .product.GetProductsResponse );
 -- product.GetProductRequest.Name.out --
 product.GetProductRequest.Name is a field:
