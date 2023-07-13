@@ -13,7 +13,7 @@ import (
 func newRootCmd() *cobra.Command {
 	cobra.EnableCommandSorting = false
 
-	rootCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "ttrpcurl [flags] <socket> <method>",
 		Short: "Make ttrpc calls based on a proto file",
 		Args: cobra.MatchAll(
@@ -22,24 +22,19 @@ func newRootCmd() *cobra.Command {
 		RunE: runRoot,
 	}
 
-	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose output.")
-	rootCmd.PersistentFlags().StringSlice("proto", []string{}, prettify(`
-		The name of a proto source file. Source files given will be used to
-		determine the RPC schema instead of querying for it from the remote
-		server via the gRPC reflection API. When set: the 'list' action lists
-		the services found in the given files and their imports (vs. those
-		exposed by the remote server), and the 'describe' action describes
-		symbols found in the given files. May specify more than one via multiple
-		-proto flags. Imports will be resolved using the given -import-path
-		flags. Multiple proto files can be specified by specifying multiple
-		-proto flags. It is an error to use both -protoset and -proto flags.`))
+	cmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose output.")
+	cmd.PersistentFlags().StringSlice("proto", []string{}, prettify(`
+		The path of a proto source file. May specify more than one via repeated
+		use of the flag or by passing a comma separated list of strings.`))
+	// Imports will be resolved using the given -import-path flags.
+	// It is an error to use both -protoset and -proto flags.
 
-	rootCmd.Flags().StringP("data", "d", "", prettify(`
+	cmd.Flags().StringP("data", "d", "", prettify(`
 		Data for request contents. If the value is '@' then the request contents
 		are read from stdin. For calls that accept a stream of requests, the
 		contents should include all such request messages concatenated together
 		(possibly delimited; see -format).`))
-	rootCmd.Flags().String("format", "json", prettify(`
+	cmd.Flags().String("format", "json", prettify(`
 		The format of request data. The allowed values are 'json' or 'text'. For
 		'json', the input data must be in JSON format. Multiple request values
 		may be concatenated (messages with a JSON representation other than
@@ -49,24 +44,24 @@ func newRootCmd() *cobra.Command {
 		ASCII character: 0x1E. The stream should not end in a record separator.
 		If it does, it will be interpreted as a final, blank message after the
 		separator.`))
-	rootCmd.Flags().Bool("allow-unknown-fields", false, prettify(`
+	cmd.Flags().Bool("allow-unknown-fields", false, prettify(`
 		When true, the request contents, if 'json' format is used, allows
 		unknown fields to be present. They will be ignored when parsing
 		the request.`))
-	rootCmd.Flags().Duration("connect-timeout", 0, prettify(`
+	cmd.Flags().Duration("connect-timeout", 0, prettify(`
 		The maximum time, in seconds, to wait for connection to be established.
 		Defaults to 10 seconds.`))
-	rootCmd.Flags().Bool("format-error", false, prettify(`
+	cmd.Flags().Bool("format-error", false, prettify(`
 		When a non-zero status is returned, format the response using the
 		value set by the -format flag .`))
-	rootCmd.Flags().Duration("max-time", 0, prettify(`
+	cmd.Flags().Duration("max-time", 0, prettify(`
 		The maximum total time the operation can take, in seconds. This is
 		useful for preventing batch jobs that use grpcurl from hanging due to
 		slow or bad network links or due to incorrect stream method usage.`))
-	rootCmd.Flags().Uint("max-msg-sz", 4194304, prettify(`
+	cmd.Flags().Uint("max-msg-sz", 4194304, prettify(`
 		The maximum encoded size of a response message, in bytes, that grpcurl
 		will accept. Defaults 4 MiB.`))
-	rootCmd.Flags().Bool("emit-defaults", false, prettify(`
+	cmd.Flags().Bool("emit-defaults", false, prettify(`
 		Emit default values for JSON-encoded responses.`))
 	// rootCmd.Flags().Bool("msg-template", false, prettify(`
 	// 	When describing messages, show a template of input data.`))
@@ -82,7 +77,7 @@ func newRootCmd() *cobra.Command {
 	// rootCmd.Flags().String("protoset-out", "", "")
 	// rootCmd.Flags().Bool("reflection", false, "")
 
-	return rootCmd
+	return cmd
 }
 
 func runRoot(cmd *cobra.Command, args []string) error {

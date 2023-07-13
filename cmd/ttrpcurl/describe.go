@@ -12,10 +12,15 @@ import (
 
 func newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe",
-		Short: "",
-		Long:  "",
-		RunE:  runDescribe,
+		Use:     "describe [flags] [symbol]",
+		Example: "ttrpcurl describe --proto=api.proto package.Service.Method",
+		Short:   "Describe a protobuf symbol from the given source",
+		Long: prettify(`
+			Show the descriptor of a given symbol based on the given proto source.
+			The symbol should be a fully-qualified name of a protobuf message,
+			enum, service, method, or field. If no symbol is given the descriptors
+			for all exposed or known services are shown`),
+		RunE: runDescribe,
 	}
 
 	return cmd

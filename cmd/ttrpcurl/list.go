@@ -12,10 +12,15 @@ import (
 
 func newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "",
-		Long:  "",
-		RunE:  runList,
+		Use:     "list [flags] [symbol]",
+		Example: "ttrpcurl list --proto=api.proto package.Service",
+		Short:   "List available protobuf services or methods of a service",
+		Long: prettify(`
+			Show a list of available services or methods, based on the given proto source.
+			If the symbol is a fully-qualified name of a protobuf service, formatted
+			like '[package.]service' or '[package/]service', the methods of that service
+			are listed. If no symbol is given, all available services are listed.`),
+		RunE: runList,
 	}
 
 	return cmd
