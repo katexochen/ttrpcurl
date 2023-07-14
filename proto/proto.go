@@ -22,17 +22,29 @@ func (s *Source) GetServices() []*desc.ServiceDescriptor {
 
 func (s *Source) FindSymbol(symbol string) (desc.Descriptor, error) {
 	for _, fileDesc := range s.fileDescs {
-		if desc := fileDesc.FindSymbol(symbol); desc != nil {
-			return desc, nil
+		if symbol := fileDesc.FindSymbol(symbol); symbol != nil {
+			return symbol, nil
 		}
 	}
 	return nil, fmt.Errorf("symbol %s not found", symbol)
 }
 
+func (s *Source) FindMethod(method string) (*desc.MethodDescriptor, error) {
+	symbol, err := s.FindSymbol(method)
+	if err != nil {
+		return nil, err
+	}
+	methodDesc, ok := symbol.(*desc.MethodDescriptor)
+	if !ok {
+		return nil, fmt.Errorf("symbol %s is not a method", method)
+	}
+	return methodDesc, nil
+}
+
 func (s *Source) FindService(service string) (*desc.ServiceDescriptor, error) {
 	for _, fileDesc := range s.fileDescs {
-		if desc := fileDesc.FindService(service); desc != nil {
-			return desc, nil
+		if service := fileDesc.FindService(service); service != nil {
+			return service, nil
 		}
 	}
 	return nil, fmt.Errorf("service %s not found", service)

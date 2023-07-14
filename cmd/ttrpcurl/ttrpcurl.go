@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"time"
 
 	"github.com/katexochen/ttrpcurl"
+	"github.com/katexochen/ttrpcurl/proto"
 	"github.com/spf13/cobra"
 )
 
@@ -96,7 +98,21 @@ func runRoot(cmd *cobra.Command, args []string) error {
 		data = []byte(flags.data)
 	}
 
-	return ttrpcurl.Execute(flags.proto, args[0], args[1], data)
+	parser := proto.NewParser()
+	source, err := parser.ParseFiles(flags.proto...)
+	if err != nil {
+		return fmt.Errorf("parsing proto files: %w", err)
+	}
+
+	conn, err := net.Dial("unix", args[0])
+	if err != nil {
+		return fmt.Errorf("dialing unix domain socket: %w", err)
+	}
+	defer conn.Close()
+
+	client := ttrpcurl.NewClient(conn, source)
+
+	return client.Call(cmd.Context(), args[1], data)
 }
 
 type rootFlags struct {

@@ -12,23 +12,37 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 )
 
-func Execute(protoFileNames []string, socket string, methodFQN string, reqBytes []byte) error {
-	parser := proto.NewParser()
-	source, err := parser.ParseFiles(protoFileNames...)
+type Client struct {
+	ttrpc  ttrpcClient
+	source *proto.Source
+}
+
+func NewClient(conn net.Conn, source *proto.Source) *Client {
+	return &Client{
+		ttrpc:  ttrpc.NewClient(conn),
+		source: source,
+	}
+}
+
+func (c *Client) Call(ctx context.Context, method string, reqBytes []byte) error {
+	mth, err := c.source.FindMethod(method)
 	if err != nil {
-		return fmt.Errorf("parsing proto files: %w", err)
+		return err
 	}
 
-	symbol, err := source.FindSymbol(methodFQN)
-	if err != nil {
-		return fmt.Errorf("finding symbol %q: %w", methodFQN, err)
+	switch {
+	case mth.IsClientStreaming() && mth.IsServerStreaming():
+		return c.callBidirectionalSteaming(ctx, mth, reqBytes)
+	case mth.IsClientStreaming():
+		return c.callClientSteaming(ctx, mth, reqBytes)
+	case mth.IsServerStreaming():
+		return c.callServerSteaming(ctx, mth, reqBytes)
+	default:
+		return c.callUnary(ctx, mth, reqBytes)
 	}
+}
 
-	mth, ok := symbol.(*desc.MethodDescriptor)
-	if !ok {
-		return fmt.Errorf("symbol %q is not a method", methodFQN)
-	}
-
+func (c *Client) callUnary(ctx context.Context, mth *desc.MethodDescriptor, reqBytes []byte) error {
 	req := dynamicpb.NewMessage(mth.GetInputType().UnwrapMessage())
 	resp := dynamicpb.NewMessage(mth.GetOutputType().UnwrapMessage())
 
@@ -40,34 +54,29 @@ func Execute(protoFileNames []string, socket string, methodFQN string, reqBytes 
 		return fmt.Errorf("invalid request")
 	}
 
-	con, err := net.Dial("unix", socket)
-	if err != nil {
-		return err
-	}
-
-	client := ttrpc.NewClient(con)
-	defer client.Close()
-
-	err = client.Call(
-		context.Background(),
+	if err := c.ttrpc.Call(
+		ctx,
 		mth.GetService().GetFullyQualifiedName(),
 		mth.GetName(),
 		req,
 		resp,
-	)
-	if err != nil {
+	); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-type Client struct {
-	ttrpc ttrpcClient
+func (c *Client) callServerSteaming(ctx context.Context, mth *desc.MethodDescriptor, reqBytes []byte) error {
+	panic("server streaming not implemented")
 }
 
-func NewClient(conn net.Conn) *Client {
-	return &Client{ttrpc: ttrpc.NewClient(conn)}
+func (c *Client) callClientSteaming(ctx context.Context, mth *desc.MethodDescriptor, reqBytes []byte) error {
+	panic("client streaming not implemented")
+}
+
+func (c *Client) callBidirectionalSteaming(ctx context.Context, mth *desc.MethodDescriptor, reqBytes []byte) error {
+	panic("bidirectional streaming not implemented")
 }
 
 type ttrpcClient interface {
