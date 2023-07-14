@@ -2,11 +2,9 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/jhump/protoreflect/desc"
-	"github.com/jhump/protoreflect/desc/protoprint"
-	"github.com/katexochen/ttrpcurl"
+	"github.com/katexochen/ttrpcurl/proto"
 	"github.com/spf13/cobra"
 )
 
@@ -32,34 +30,17 @@ func runDescribe(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("parsing flags: %w", err)
 	}
 
-	f, err := os.Open(flags.proto[0])
+	parser := proto.NewParser()
+	source, err := parser.ParseFiles(flags.proto...)
 	if err != nil {
-		return fmt.Errorf("opening proto file: %w", err)
-	}
-	defer f.Close()
-
-	parser := ttrpcurl.NewProtoParser()
-
-	fileDesc, err := parser.ParseFile(flags.proto[0], f)
-	if err != nil {
-		return fmt.Errorf("parsing proto file: %w", err)
+		return fmt.Errorf("parsing proto files: %w", err)
 	}
 
-	printer := &protoprint.Printer{
-		Compact:                  true,
-		OmitComments:             protoprint.CommentsAll,
-		SortElements:             true,
-		ForceFullyQualifiedNames: true,
-	}
-
-	file, err := desc.WrapFile(fileDesc)
-	if err != nil {
-		return fmt.Errorf("wrapping file descriptor: %w", err)
-	}
+	printer := proto.NewPrinter()
 
 	switch len(args) {
 	case 0:
-		services := file.GetServices()
+		services := source.GetServices()
 		for _, svc := range services {
 			proroSnip, err := printer.PrintProtoToString(svc)
 			if err != nil {
@@ -71,9 +52,9 @@ func runDescribe(cmd *cobra.Command, args []string) error {
 		}
 		return nil
 	case 1:
-		symbol := file.FindSymbol(args[0])
-		if symbol == nil {
-			return fmt.Errorf("symbol %q not found", args[0])
+		symbol, err := source.FindSymbol(args[0])
+		if err != nil {
+			return fmt.Errorf("finding symbol: %w", err)
 		}
 
 		symbolType, err := descriptorTypeStr(symbol)

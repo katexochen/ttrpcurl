@@ -2,11 +2,9 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"sort"
 
-	"github.com/jhump/protoreflect/desc"
-	"github.com/katexochen/ttrpcurl"
+	"github.com/katexochen/ttrpcurl/proto"
 	"github.com/spf13/cobra"
 )
 
@@ -32,28 +30,16 @@ func runList(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("parse flags: %w", err)
 	}
 
-	f, err := os.Open(flags.proto[0])
+	parser := proto.NewParser()
+	source, err := parser.ParseFiles(flags.proto...)
 	if err != nil {
-		return fmt.Errorf("opening proto file: %w", err)
-	}
-	defer f.Close()
-
-	parser := ttrpcurl.NewProtoParser()
-
-	fileDesc, err := parser.ParseFile(flags.proto[0], f)
-	if err != nil {
-		return fmt.Errorf("parsing proto file: %w", err)
-	}
-
-	file, err := desc.WrapFile(fileDesc)
-	if err != nil {
-		return fmt.Errorf("wrapping file descriptor: %w", err)
+		return fmt.Errorf("parsing proto files: %w", err)
 	}
 
 	switch len(args) {
 	case 0:
 		var svcNames []string
-		for _, svc := range file.GetServices() {
+		for _, svc := range source.GetServices() {
 			svcNames = append(svcNames, svc.GetFullyQualifiedName())
 		}
 		sort.Strings(svcNames)
@@ -62,9 +48,9 @@ func runList(cmd *cobra.Command, args []string) error {
 		}
 		return nil
 	case 1:
-		svc := file.FindService(args[0])
-		if svc == nil {
-			return fmt.Errorf("service %q not found", args[0])
+		svc, err := source.FindService(args[0])
+		if err != nil {
+			return fmt.Errorf("finding service: %w", err)
 		}
 		var methodNames []string
 		for _, method := range svc.GetMethods() {
