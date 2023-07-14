@@ -46,21 +46,20 @@ func (c *Client) callUnary(ctx context.Context, mth *desc.MethodDescriptor, reqB
 	req := dynamicpb.NewMessage(mth.GetInputType().UnwrapMessage())
 	resp := dynamicpb.NewMessage(mth.GetOutputType().UnwrapMessage())
 
-	if err := protojson.Unmarshal(reqBytes, req); err != nil {
-		return err
+	if len(reqBytes) != 0 {
+		if err := protojson.Unmarshal(reqBytes, req); err != nil {
+			return err
+		}
 	}
 
 	if !req.IsValid() {
 		return fmt.Errorf("invalid request")
 	}
 
-	if err := c.ttrpc.Call(
-		ctx,
-		mth.GetService().GetFullyQualifiedName(),
-		mth.GetName(),
-		req,
-		resp,
-	); err != nil {
+	serviceFQN := mth.GetService().GetFullyQualifiedName()
+	methodName := mth.GetName()
+
+	if err := c.ttrpc.Call(ctx, serviceFQN, methodName, req, resp); err != nil {
 		return err
 	}
 

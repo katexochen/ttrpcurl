@@ -1,0 +1,3 @@
+# list fails without --proto
+! exec ttrpcurl list
+stderr '^Error: required flag.*proto.*'

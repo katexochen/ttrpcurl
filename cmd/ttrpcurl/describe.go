@@ -21,6 +21,8 @@ func newDescribeCommand() *cobra.Command {
 		RunE: runDescribe,
 	}
 
+	cmd.MarkPersistentFlagRequired("proto")
+
 	return cmd
 }
 

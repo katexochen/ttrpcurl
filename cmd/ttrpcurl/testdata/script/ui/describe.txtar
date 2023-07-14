@@ -1,0 +1,3 @@
+# describe fails without --proto
+! exec ttrpcurl describe
+stderr '^Error: required flag.*proto.*'

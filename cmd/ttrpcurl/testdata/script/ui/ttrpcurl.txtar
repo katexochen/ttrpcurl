@@ -1,0 +1,2 @@
+# fails without command or args
+! exec ttrpcurl

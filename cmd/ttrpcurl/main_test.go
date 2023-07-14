@@ -62,6 +62,15 @@ func TestGrpcurlCompat(t *testing.T) {
 	})
 }
 
+func TestUI(t *testing.T) {
+	testscript.Run(t, testscript.Params{
+		Dir:                 filepath.Join("testdata", "script", "ui"),
+		UpdateScripts:       *update,
+		RequireUniqueNames:  true,
+		RequireExplicitExec: true,
+	})
+}
+
 func setupEnv(envVars map[string]string) func(e *testscript.Env) error {
 	return func(e *testscript.Env) error {
 		for k, v := range envVars {
