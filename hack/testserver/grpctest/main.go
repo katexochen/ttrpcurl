@@ -1,4 +1,4 @@
-package main
+package grpctest
 
 import (
 	"context"
@@ -12,13 +12,14 @@ import (
 	"github.com/containerd/ttrpc"
 )
 
-func main() {
-	if err := run(); err != nil {
-		log.Fatal(err)
+func ScriptMain() int {
+	if err := Run(); err != nil {
+		return 1
 	}
+	return 0
 }
 
-func run() error {
+func Run() error {
 	socket := flag.String("socket", "test.sock", "socket path")
 	flag.Parse()
 

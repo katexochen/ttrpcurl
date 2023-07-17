@@ -1,7 +1,7 @@
 // Copyright (c) 2017 FullStory, Inc
 // Based on https://github.com/fullstorydev/grpcurl/blob/9a59bed1d22aceb0719d4890dea642c058b0d623/internal/testing/cmd/testserver/testserver.go
 
-package main
+package grpctest
 
 import (
 	"context"

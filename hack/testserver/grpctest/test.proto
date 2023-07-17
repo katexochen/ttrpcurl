@@ -18,9 +18,7 @@
 // of unary/streaming requests/responses.
 syntax = "proto3";
 
-package grpctest;
-
-option go_package = ".;main";
+option go_package = ".;grpctest";
 
 message Empty {}
 
