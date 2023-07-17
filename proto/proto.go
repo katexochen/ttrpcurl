@@ -108,7 +108,7 @@ func NewPrinter() *Printer {
 	return &Printer{
 		printer: protoprint.Printer{
 			Compact:                  true,
-			OmitComments:             protoprint.CommentsAll,
+			OmitComments:             protoprint.CommentsNonDoc,
 			SortElements:             true,
 			ForceFullyQualifiedNames: true,
 		},

@@ -14,5 +14,3 @@
 - [ ] Support bidirectional streaming calls
 
 ## Limitations
-
-- Describe doesn't print comments from proto source.

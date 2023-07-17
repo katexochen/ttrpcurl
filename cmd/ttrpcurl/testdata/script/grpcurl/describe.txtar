@@ -72,9 +72,13 @@ message GetProductRequest {
     string Name = 1;
 }
 
+// GetProductResponse returns a protuct.
 message GetProductResponse {
+    // Product is the serialized product.
     bytes Product = 1;
+    // Name is the name of the product.
     string Name = 2;
+    // Price is the price of the product.
     int64 Price = 3;
 }
 
@@ -128,9 +132,13 @@ message GetProductRequest {
 }
 -- product.GetProductResponse.out --
 product.GetProductResponse is a message:
+// GetProductResponse returns a protuct.
 message GetProductResponse {
+  // Product is the serialized product.
   bytes Product = 1;
+  // Name is the name of the product.
   string Name = 2;
+  // Price is the price of the product.
   int64 Price = 3;
 }
 -- product.GetProductsRequest.out --
@@ -154,10 +162,13 @@ product.GetProductRequest.Name is a field:
 string Name = 1;
 -- product.GetProductResponse.Product.out --
 product.GetProductResponse.Product is a field:
+// Product is the serialized product.
 bytes Product = 1;
 -- product.GetProductResponse.Name.out --
 product.GetProductResponse.Name is a field:
+// Name is the name of the product.
 string Name = 2;
 -- product.GetProductResponse.Price.out --
 product.GetProductResponse.Price is a field:
+// Price is the price of the product.
 int64 Price = 3;
