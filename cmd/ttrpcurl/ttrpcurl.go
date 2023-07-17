@@ -66,8 +66,6 @@ func newRootCmd() *cobra.Command {
 		will accept. Defaults 4 MiB.`))
 	cmd.Flags().Bool("emit-defaults", false, prettify(`
 		Emit default values for JSON-encoded responses.`))
-	// rootCmd.Flags().Bool("msg-template", false, prettify(`
-	// 	When describing messages, show a template of input data.`))
 
 	// Unused flags, might be implemented in the future
 	// rootCmd.Flags().StringSlice("protoset", nil, "")
@@ -105,7 +103,8 @@ func runRoot(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("parsing proto files: %w", err)
 	}
 
-	conn, err := net.Dial("unix", args[0])
+	dialer := net.Dialer{}
+	conn, err := dialer.Dial("unix", args[0])
 	if err != nil {
 		return fmt.Errorf("dialing unix domain socket: %w", err)
 	}

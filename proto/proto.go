@@ -20,6 +20,14 @@ func (s *Source) GetServices() []*desc.ServiceDescriptor {
 	return services
 }
 
+func (s *Source) GetMessages() []*desc.MessageDescriptor {
+	var messages []*desc.MessageDescriptor
+	for _, fileDesc := range s.fileDescs {
+		messages = append(messages, fileDesc.GetMessageTypes()...)
+	}
+	return messages
+}
+
 func (s *Source) FindSymbol(symbol string) (desc.Descriptor, error) {
 	for _, fileDesc := range s.fileDescs {
 		if symbol := fileDesc.FindSymbol(symbol); symbol != nil {
@@ -48,6 +56,26 @@ func (s *Source) FindService(service string) (*desc.ServiceDescriptor, error) {
 		}
 	}
 	return nil, fmt.Errorf("service %s not found", service)
+}
+
+func (s *Source) FindMessage(message string) (*desc.MessageDescriptor, error) {
+	symbol, err := s.FindSymbol(message)
+	if err != nil {
+		return nil, err
+	}
+	messageDesc, ok := symbol.(*desc.MessageDescriptor)
+	if !ok {
+		return nil, fmt.Errorf("symbol %s is not a message", message)
+	}
+	return messageDesc, nil
+}
+
+func (s *Source) ListServices() ([]string, error) {
+	panic("not implemented")
+}
+
+func (s *Source) AllExtensionsForType(typeName string) ([]*desc.FieldDescriptor, error) {
+	panic("not implemented")
 }
 
 type Parser struct {
