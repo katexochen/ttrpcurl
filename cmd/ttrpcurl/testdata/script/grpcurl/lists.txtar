@@ -1,17 +1,17 @@
 # list services
 exec ttrpcurl --proto product.proto list
-cmp stdout product.list.out
 ! stderr .+
+cmp stdout product.list.out
 
 # list methods product.GetProductService
 exec ttrpcurl --proto product.proto list product.ProductService
-cmp stdout product.list.product.GetProductService.out
 ! stderr .+
+cmp stdout product.list.product.GetProductService.out
 
 # list methods product.AdminsService
 exec ttrpcurl --proto product.proto list product.AdminsService
-cmp stdout product.list.product.AdminsService.out
 ! stderr .+
+cmp stdout product.list.product.AdminsService.out
 
 -- product.proto --
 syntax = "proto3";

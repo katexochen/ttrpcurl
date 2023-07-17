@@ -1,67 +1,67 @@
 # describe services
 exec ttrpcurl --proto product.proto describe
-cmp stdout product.services.out
 ! stderr .+
+cmp stdout product.services.out
 
 # describe service product.ProductService
 exec ttrpcurl --proto product.proto describe product.ProductService
-cmp stdout product.ProductService.out
 ! stderr .+
+cmp stdout product.ProductService.out
 
 # describe service product.AdminsService
 exec ttrpcurl --proto product.proto describe product.AdminsService
-cmp stdout product.AdminsService.out
 ! stderr .+
+cmp stdout product.AdminsService.out
 
 # describe request product.GetProductRequest
 exec ttrpcurl --proto product.proto describe product.GetProductRequest
-cmp stdout product.GetProductRequest.out
 ! stderr .+
+cmp stdout product.GetProductRequest.out
 
 # describe request product.GetProductResponse
 exec ttrpcurl --proto product.proto describe product.GetProductResponse
-cmp stdout product.GetProductResponse.out
 ! stderr .+
+cmp stdout product.GetProductResponse.out
 
 # describe request product.GetProductsRequest
 exec ttrpcurl --proto product.proto describe product.GetProductsRequest
-cmp stdout product.GetProductsRequest.out
 ! stderr .+
+cmp stdout product.GetProductsRequest.out
 
 # describe request product.GetProductsResponse
 exec ttrpcurl --proto product.proto describe product.GetProductsResponse
-cmp stdout product.GetProductsResponse.out
 ! stderr .+
+cmp stdout product.GetProductsResponse.out
 
 # describe field product.GetProductRequest.Name
 exec ttrpcurl --proto product.proto describe product.GetProductRequest.Name
-cmp stdout product.GetProductRequest.Name.out
 ! stderr .+
+cmp stdout product.GetProductRequest.Name.out
 
 # describe field product.GetProductResponse.Product
 exec ttrpcurl --proto product.proto describe product.GetProductResponse.Product
-cmp stdout product.GetProductResponse.Product.out
 ! stderr .+
+cmp stdout product.GetProductResponse.Product.out
 
 # describe field product.GetProductResponse.Name
 exec ttrpcurl --proto product.proto describe product.GetProductResponse.Name
-cmp stdout product.GetProductResponse.Name.out
 ! stderr .+
+cmp stdout product.GetProductResponse.Name.out
 
 # describe field product.GetProductResponse.Price
 exec ttrpcurl --proto product.proto describe product.GetProductResponse.Price
-cmp stdout product.GetProductResponse.Price.out
 ! stderr .+
+cmp stdout product.GetProductResponse.Price.out
 
 # describe method product.ProductService.GetProduct
 exec ttrpcurl --proto product.proto describe product.ProductService.GetProduct
-cmp stdout product.ProductService.GetProduct.out
 ! stderr .+
+cmp stdout product.ProductService.GetProduct.out
 
 # describe method product.ProductService.GetProducts
 exec ttrpcurl --proto product.proto describe product.ProductService.GetProducts
-cmp stdout product.ProductService.GetProducts.out
 ! stderr .+
+cmp stdout product.ProductService.GetProducts.out
 
 -- product.proto --
 syntax = "proto3";

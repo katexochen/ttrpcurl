@@ -1,14 +1,14 @@
 # describe on method with comment fails
 exec ttrpcurl --proto comments.proto describe Service.GetValue
+! stderr .+
 [update] cmp stdout describe.comments.Service.GetValue.out
 [!update] ! cmp stdout describe.comments.Service.GetValue.out
-! stderr .+
 
 # describe on a method with comment succeeds
 exec ttrpcurl --proto comments.proto describe GetValueRequest
+! stderr .+
 [update] cmp stdout describe.comments.GetValueRequest.out
 [!update] ! cmp stdout describe.comments.GetValueRequest.out
-! stderr .+
 
 -- comments.proto --
 syntax = "proto3";
