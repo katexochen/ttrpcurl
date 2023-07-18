@@ -23,8 +23,6 @@ func newDescribeCommand() *cobra.Command {
 		RunE: runDescribe,
 	}
 
-	must(cmd.MarkPersistentFlagRequired("proto"))
-
 	cmd.Flags().Bool("msg-template", false, prettify(`
 		When describing messages, show a template of input data.`))
 	cmd.Flags().String("format", "json", prettify(`

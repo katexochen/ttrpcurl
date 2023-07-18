@@ -38,7 +38,7 @@ func Run() error {
 	RegisterTestServiceService(s, &TestServer{})
 
 	callback := func() {
-		s.Shutdown(context.Background())
+		_ = s.Shutdown(context.Background())
 		log.Println("Server shutdown done, cleaning up..")
 	}
 
