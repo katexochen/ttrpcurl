@@ -2,6 +2,7 @@ package grpctest
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -52,7 +53,9 @@ func Run() error {
 	defer conn.Close()
 
 	if err := s.Serve(ctx, conn); err != nil {
-		return err
+		if ctx.Err() == context.Canceled && errors.Is(err, ttrpc.ErrServerClosed) {
+			return nil
+		}
 	}
 
 	return nil
