@@ -1,0 +1,31 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:base",
+        ":preserveSemverRanges",
+        "helpers:pinGitHubActionDigests",
+        ":separateMajorReleases",
+        ":semanticCommitsDisabled"
+    ],
+    "commitMessagePrefix": "deps:",
+    "commitMessageAction": "update",
+    "addLabels": [
+        "dependencies"
+    ],
+    "postUpdateOptions": [
+        "gomodTidy",
+        "gomodUpdateImportPaths"
+    ],
+    "packageRules": [
+        {
+            "matchManagers": [
+                "gomod"
+            ],
+            "matchDepTypes": [
+                "indirect"
+            ],
+            "enabled": true,
+            "prPriority": -30
+        }
+    ]
+}
