@@ -105,14 +105,14 @@ service AdminsService {
     rpc GetAdmins(GetAdminsRequest) returns (GetAdminsResponse) {};
 }
 -- product.services.out --
+product.AdminsService is a service:
+service AdminsService {
+  rpc GetAdmins ( .product.GetAdminsRequest ) returns ( .product.GetAdminsResponse );
+}
 product.ProductService is a service:
 service ProductService {
   rpc GetProduct ( .product.GetProductRequest ) returns ( .product.GetProductResponse );
   rpc GetProducts ( .product.GetProductsRequest ) returns ( .product.GetProductsResponse );
-}
-product.AdminsService is a service:
-service AdminsService {
-  rpc GetAdmins ( .product.GetAdminsRequest ) returns ( .product.GetAdminsResponse );
 }
 -- product.ProductService.out --
 product.ProductService is a service:

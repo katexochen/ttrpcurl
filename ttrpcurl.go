@@ -3,7 +3,9 @@ package ttrpcurl
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
+	"os"
 
 	"github.com/containerd/ttrpc"
 	"github.com/jhump/protoreflect/desc"
@@ -13,14 +15,16 @@ import (
 )
 
 type Client struct {
-	ttrpc  ttrpcClient
-	source *proto.Source
+	ttrpc     ttrpcClient
+	source    *proto.Source
+	marshaler *protojson.MarshalOptions
 }
 
-func NewClient(conn net.Conn, source *proto.Source) *Client {
+func NewClient(conn net.Conn, source *proto.Source, jsonMarshaler *protojson.MarshalOptions) *Client {
 	return &Client{
-		ttrpc:  ttrpc.NewClient(conn),
-		source: source,
+		ttrpc:     ttrpc.NewClient(conn),
+		source:    source,
+		marshaler: jsonMarshaler,
 	}
 }
 
@@ -53,7 +57,7 @@ func (c *Client) callUnary(ctx context.Context, mth *desc.MethodDescriptor, reqB
 	}
 
 	if !req.IsValid() {
-		return fmt.Errorf("invalid request")
+		return fmt.Errorf("marshaled input is invalid request")
 	}
 
 	serviceFQN := mth.GetService().GetFullyQualifiedName()
@@ -63,7 +67,17 @@ func (c *Client) callUnary(ctx context.Context, mth *desc.MethodDescriptor, reqB
 		return err
 	}
 
-	return nil
+	if !resp.IsValid() {
+		return fmt.Errorf("received invalid response")
+	}
+
+	respBytes, err := c.marshaler.Marshal(resp)
+	if err != nil {
+		return err
+	}
+
+	_, err = io.WriteString(os.Stdout, string(respBytes))
+	return err
 }
 
 func (c *Client) callServerSteaming(ctx context.Context, mth *desc.MethodDescriptor, reqBytes []byte) error {
