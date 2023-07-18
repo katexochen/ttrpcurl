@@ -1,0 +1,35 @@
+run:
+  timeout: 10m
+  modules-download-mode: readonly
+
+output:
+  format: tab
+  sort-results: true
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - bodyclose
+    - errname
+    - exportloopref
+    - godot
+    - gofumpt
+    - misspell
+    - noctx
+    - revive
+    - tenv
+    - unconvert
+    - unparam
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  include:
+    - EXC0012
+    - EXC0014
