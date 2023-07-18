@@ -88,3 +88,9 @@ func prettify(docString string) string {
 
 	return strings.Join(parts[:j], "\n")
 }
+
+func must(err error) {
+	if err != nil {
+		panic(err)
+	}
+}

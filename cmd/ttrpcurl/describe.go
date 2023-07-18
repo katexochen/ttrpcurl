@@ -23,7 +23,7 @@ func newDescribeCommand() *cobra.Command {
 		RunE: runDescribe,
 	}
 
-	cmd.MarkPersistentFlagRequired("proto")
+	must(cmd.MarkPersistentFlagRequired("proto"))
 
 	cmd.Flags().Bool("msg-template", false, prettify(`
 		When describing messages, show a template of input data.`))
@@ -57,7 +57,7 @@ func runDescribe(cmd *cobra.Command, args []string) error {
 			}
 
 			fmt.Printf("%s is a service:\n", svc.GetFullyQualifiedName())
-			fmt.Printf(proroSnip)
+			fmt.Printf("%s", proroSnip)
 		}
 		return nil
 	}
@@ -82,7 +82,7 @@ func runDescribe(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("%s is a %s:\n", symbol.GetFullyQualifiedName(), symbolType)
-	fmt.Printf(proroSnip)
+	fmt.Printf("%s", proroSnip)
 
 	if flags.msgTemplate {
 		tmpl, err := createTemplate(symbol, source, flags.format)

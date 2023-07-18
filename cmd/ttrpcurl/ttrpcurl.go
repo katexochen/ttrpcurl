@@ -30,7 +30,7 @@ func newRootCmd() *cobra.Command {
 		use of the flag or by passing a comma separated list of strings.`))
 	// Imports will be resolved using the given -import-path flags.
 	// It is an error to use both -protoset and -proto flags.
-	cmd.MarkPersistentFlagRequired("proto")
+	must(cmd.MarkPersistentFlagRequired("proto"))
 
 	cmd.Flags().StringP("data", "d", "", prettify(`
 		Data for request contents. If the value is '@' then the request contents
