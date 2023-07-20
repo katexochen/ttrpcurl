@@ -14,27 +14,10 @@ import (
 
 const replaceWithGrpcurl = "REPLACE_WITH_GRPCURL"
 
-func ttrpcurlMain() int {
-	if os.Getenv(replaceWithGrpcurl) == "true" {
-		return grpcurlMain()
-	}
-	if err := run(); err != nil {
-		return 1
-	}
-	return 0
-}
-
-func grpcurlMain() int {
-	cmd := exec.Command("grpcurl", os.Args[1:]...)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		fmt.Println(err)
-		return 1
-	}
-	return 0
-}
+var (
+	update        = flag.Bool("u", false, "update testscript output files")
+	runTestscript = flag.Bool("testscript", false, "run testscript tests")
+)
 
 func TestMain(m *testing.M) {
 	os.Exit(testscript.RunMain(m, map[string]func() int{
@@ -43,9 +26,11 @@ func TestMain(m *testing.M) {
 	}))
 }
 
-var update = flag.Bool("u", false, "update testscript output files")
-
 func TestGrpcurlCompat(t *testing.T) {
+	if !*runTestscript {
+		t.Skip("skipping testscript tests; use -testscript to enable")
+	}
+
 	conds := map[string]bool{
 		"update": *update,
 	}
@@ -65,6 +50,10 @@ func TestGrpcurlCompat(t *testing.T) {
 }
 
 func TestUI(t *testing.T) {
+	if !*runTestscript {
+		t.Skip("skipping testscript tests; use -testscript to enable")
+	}
+
 	testscript.Run(t, testscript.Params{
 		Dir:                 filepath.Join("testdata", "script", "ui"),
 		UpdateScripts:       *update,
@@ -74,6 +63,10 @@ func TestUI(t *testing.T) {
 }
 
 func TestClientServer(t *testing.T) {
+	if !*runTestscript {
+		t.Skip("skipping testscript tests; use -testscript to enable")
+	}
+
 	testscript.Run(t, testscript.Params{
 		Dir:                 filepath.Join("testdata", "script", "clientserver"),
 		UpdateScripts:       *update,
@@ -99,4 +92,26 @@ func conditionsFromMap(m map[string]bool) func(string) (bool, error) {
 		}
 		return val, nil
 	}
+}
+
+func ttrpcurlMain() int {
+	if os.Getenv(replaceWithGrpcurl) == "true" {
+		return grpcurlMain()
+	}
+	if err := run(); err != nil {
+		return 1
+	}
+	return 0
+}
+
+func grpcurlMain() int {
+	cmd := exec.Command("grpcurl", os.Args[1:]...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmt.Println(err)
+		return 1
+	}
+	return 0
 }
