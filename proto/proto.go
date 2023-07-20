@@ -1,11 +1,14 @@
 package proto
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/desc/protoprint"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type Source struct {
@@ -117,4 +120,37 @@ func NewPrinter() *Printer {
 
 func (p *Printer) PrintProtoToString(desc desc.Descriptor) (string, error) {
 	return p.printer.PrintProtoToString(desc)
+}
+
+type Marshaler struct {
+	Multiline bool
+}
+
+func (m Marshaler) Marshal(mes protoreflect.ProtoMessage) ([]byte, error) {
+	b, err := protojson.Marshal(mes)
+	if err != nil {
+		return nil, fmt.Errorf("marshaling proto message: %w", err)
+	}
+
+	if m.Multiline {
+		// The protojson package viciously adds random spaces between name and value
+		// of JSON multiline output. As this is neither wanted for our users, nor in
+		// the tests, we always use the protojson default marshaling and remarshal
+		// with the standard library to get a clean output.
+		//
+		// See https://github.com/protocolbuffers/protobuf-go/blob/55f120eb3b91659cee86adeed925c825686556b0/internal/encoding/json/encode.go#L238-L243
+		// for the gory details.
+
+		var intermed any
+		if err := json.Unmarshal(b, &intermed); err != nil {
+			return nil, fmt.Errorf("unmarshaling json: %w", err)
+		}
+
+		b, err = json.MarshalIndent(intermed, "", "  ")
+		if err != nil {
+			return nil, fmt.Errorf("remarshaling json: %w", err)
+		}
+	}
+
+	return b, nil
 }

@@ -9,7 +9,6 @@ import (
 	"github.com/katexochen/ttrpcurl"
 	"github.com/katexochen/ttrpcurl/proto"
 	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func newRootCmd() *cobra.Command {
@@ -110,8 +109,8 @@ func runRoot(cmd *cobra.Command, args []string) error {
 	}
 	defer conn.Close()
 
-	marshaler := &protojson.MarshalOptions{Multiline: true}
-	client := ttrpcurl.NewClient(conn, source, marshaler)
+	outputMarshaler := proto.Marshaler{Multiline: true}
+	client := ttrpcurl.NewClient(conn, source, outputMarshaler)
 
 	return client.Call(cmd.Context(), args[1], data)
 }

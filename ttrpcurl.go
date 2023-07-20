@@ -14,16 +14,16 @@ import (
 )
 
 type Client struct {
-	ttrpc     ttrpcClient
-	source    *proto.Source
-	marshaler *protojson.MarshalOptions
+	ttrpc           ttrpcClient
+	source          *proto.Source
+	outputMarshaler proto.Marshaler
 }
 
-func NewClient(conn net.Conn, source *proto.Source, jsonMarshaler *protojson.MarshalOptions) *Client {
+func NewClient(conn net.Conn, source *proto.Source, marsh proto.Marshaler) *Client {
 	return &Client{
-		ttrpc:     ttrpc.NewClient(conn),
-		source:    source,
-		marshaler: jsonMarshaler,
+		ttrpc:           ttrpc.NewClient(conn),
+		source:          source,
+		outputMarshaler: marsh,
 	}
 }
 
@@ -70,7 +70,7 @@ func (c *Client) callUnary(ctx context.Context, mth *desc.MethodDescriptor, reqB
 		return fmt.Errorf("received invalid response")
 	}
 
-	respBytes, err := c.marshaler.Marshal(resp)
+	respBytes, err := c.outputMarshaler.Marshal(resp)
 	if err != nil {
 		return err
 	}
