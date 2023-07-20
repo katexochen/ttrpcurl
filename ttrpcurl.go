@@ -3,7 +3,6 @@ package ttrpcurl
 import (
 	"context"
 	"fmt"
-	"io"
 	"net"
 	"os"
 
@@ -76,7 +75,7 @@ func (c *Client) callUnary(ctx context.Context, mth *desc.MethodDescriptor, reqB
 		return err
 	}
 
-	_, err = io.WriteString(os.Stdout, string(respBytes))
+	fmt.Fprintln(os.Stdout, string(respBytes))
 	return err
 }
 

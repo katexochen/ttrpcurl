@@ -22,8 +22,7 @@ type TestServer struct{}
 
 // EmptyCall accepts one empty request and issues one empty response.
 func (TestServer) EmptyCall(ctx context.Context, req *Empty) (*Empty, error) {
-	md, failEarly, failLate := processMetadata(ctx)
-	ctx = ttrpc.WithMetadata(ctx, md)
+	_, failEarly, failLate := processMetadata(ctx)
 
 	if failEarly != codes.OK {
 		return nil, status.Error(failEarly, "fail")
@@ -38,19 +37,41 @@ func (TestServer) EmptyCall(ctx context.Context, req *Empty) (*Empty, error) {
 // UnaryCall accepts one request and issues one response. The response includes
 // the client's payload as-is.
 func (TestServer) UnaryCall(ctx context.Context, req *SimpleRequest) (*SimpleResponse, error) {
-	md, failEarly, failLate := processMetadata(ctx)
-	ctx = ttrpc.WithMetadata(ctx, md)
+	_, failEarly, failLate := processMetadata(ctx)
 
 	if failEarly != codes.OK {
 		return nil, status.Error(failEarly, "fail")
 	}
+
+	if req.ResponseStatus != nil {
+		return nil, status.Error(codes.Code(req.ResponseStatus.Code), req.ResponseStatus.Message)
+	}
+
+	if req.FillOauthScope {
+		return nil, status.Error(codes.Unimplemented, "oauth scope not implemented")
+	}
+
+	resp := &SimpleResponse{}
+
+	if req.FillUsername {
+		resp.Username = "Paul"
+	}
+
+	if req.Payload != nil {
+		resp.Payload = &Payload{
+			Type: req.ResponseType,
+			Body: make([]byte, req.ResponseSize),
+		}
+		for i := 0; i < int(req.ResponseSize); i++ {
+			resp.Payload.Body[i] = byte('A')
+		}
+	}
+
 	if failLate != codes.OK {
 		return nil, status.Error(failLate, "fail")
 	}
 
-	return &SimpleResponse{
-		Payload: req.Payload,
-	}, nil
+	return resp, nil
 }
 
 // StreamingOutputCall accepts one request and issues a sequence of responses
@@ -107,14 +128,14 @@ func (TestServer) StreamingInputCall(ctx context.Context, str TestService_Stream
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
 		}
-		if req, err := str.Recv(); err != nil {
+		req, err := str.Recv()
+		if err != nil {
 			if err == io.EOF {
 				break
 			}
 			return nil, err
-		} else {
-			sz += len(req.Payload.Body)
 		}
+		sz += len(req.Payload.Body)
 	}
 
 	if failLate != codes.OK {
@@ -183,14 +204,14 @@ func (TestServer) HalfDuplexCall(ctx context.Context, str TestService_HalfDuplex
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
-		if req, err := str.Recv(); err != nil {
+		req, err := str.Recv()
+		if err != nil {
 			if err == io.EOF {
 				break
 			}
 			return err
-		} else {
-			reqs = append(reqs, req)
 		}
+		reqs = append(reqs, req)
 	}
 	rsp := &StreamingOutputCallResponse{}
 	for _, req := range reqs {

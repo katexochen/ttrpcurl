@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/katexochen/ttrpcurl/hack/testserver/grpctest"
 	"github.com/rogpeppe/go-internal/testscript"
 )
 
@@ -37,7 +38,8 @@ func grpcurlMain() int {
 
 func TestMain(m *testing.M) {
 	os.Exit(testscript.RunMain(m, map[string]func() int{
-		"ttrpcurl": ttrpcurlMain,
+		"ttrpcurl":   ttrpcurlMain,
+		"testserver": grpctest.ScriptMain,
 	}))
 }
 
@@ -65,6 +67,15 @@ func TestGrpcurlCompat(t *testing.T) {
 func TestUI(t *testing.T) {
 	testscript.Run(t, testscript.Params{
 		Dir:                 filepath.Join("testdata", "script", "ui"),
+		UpdateScripts:       *update,
+		RequireUniqueNames:  true,
+		RequireExplicitExec: true,
+	})
+}
+
+func TestClientServer(t *testing.T) {
+	testscript.Run(t, testscript.Params{
+		Dir:                 filepath.Join("testdata", "script", "clientserver"),
 		UpdateScripts:       *update,
 		RequireUniqueNames:  true,
 		RequireExplicitExec: true,
