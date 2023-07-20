@@ -77,7 +77,7 @@ func (s *Source) ListServices() ([]string, error) {
 	panic("not implemented")
 }
 
-func (s *Source) AllExtensionsForType(typeName string) ([]*desc.FieldDescriptor, error) {
+func (s *Source) AllExtensionsForType(_ string) ([]*desc.FieldDescriptor, error) {
 	panic("not implemented")
 }
 

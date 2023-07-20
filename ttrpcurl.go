@@ -79,15 +79,15 @@ func (c *Client) callUnary(ctx context.Context, mth *desc.MethodDescriptor, reqB
 	return err
 }
 
-func (c *Client) callServerSteaming(ctx context.Context, mth *desc.MethodDescriptor, reqBytes []byte) error {
+func (c *Client) callServerSteaming(_ context.Context, _ *desc.MethodDescriptor, _ []byte) error {
 	panic("server streaming not implemented")
 }
 
-func (c *Client) callClientSteaming(ctx context.Context, mth *desc.MethodDescriptor, reqBytes []byte) error {
+func (c *Client) callClientSteaming(_ context.Context, _ *desc.MethodDescriptor, _ []byte) error {
 	panic("client streaming not implemented")
 }
 
-func (c *Client) callBidirectionalSteaming(ctx context.Context, mth *desc.MethodDescriptor, reqBytes []byte) error {
+func (c *Client) callBidirectionalSteaming(_ context.Context, _ *desc.MethodDescriptor, _ []byte) error {
 	panic("bidirectional streaming not implemented")
 }
 
