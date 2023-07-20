@@ -5,7 +5,6 @@ import (
 	"io"
 	"net"
 	"os"
-	"time"
 
 	"github.com/katexochen/ttrpcurl"
 	"github.com/katexochen/ttrpcurl/proto"
@@ -48,25 +47,25 @@ func newRootCmd() *cobra.Command {
 		ASCII character: 0x1E. The stream should not end in a record separator.
 		If it does, it will be interpreted as a final, blank message after the
 		separator.`))
-	cmd.Flags().Bool("allow-unknown-fields", false, prettify(`
-		When true, the request contents, if 'json' format is used, allows
-		unknown fields to be present. They will be ignored when parsing
-		the request.`))
-	cmd.Flags().Duration("connect-timeout", 0, prettify(`
-		The maximum time, in seconds, to wait for connection to be established.
-		Defaults to 10 seconds.`))
-	cmd.Flags().Bool("format-error", false, prettify(`
-		When a non-zero status is returned, format the response using the
-		value set by the -format flag .`))
-	cmd.Flags().Duration("max-time", 0, prettify(`
-		The maximum total time the operation can take, in seconds. This is
-		useful for preventing batch jobs that use grpcurl from hanging due to
-		slow or bad network links or due to incorrect stream method usage.`))
-	cmd.Flags().Uint("max-msg-sz", 4194304, prettify(`
-		The maximum encoded size of a response message, in bytes, that grpcurl
-		will accept. Defaults 4 MiB.`))
-	cmd.Flags().Bool("emit-defaults", false, prettify(`
-		Emit default values for JSON-encoded responses.`))
+	// cmd.Flags().Bool("allow-unknown-fields", false, prettify(`
+	// 	When true, the request contents, if 'json' format is used, allows
+	// 	unknown fields to be present. They will be ignored when parsing
+	// 	the request.`))
+	// cmd.Flags().Duration("connect-timeout", 0, prettify(`
+	// 	The maximum time, in seconds, to wait for connection to be established.
+	// 	Defaults to 10 seconds.`))
+	// cmd.Flags().Bool("format-error", false, prettify(`
+	// 	When a non-zero status is returned, format the response using the
+	// 	value set by the -format flag .`))
+	// cmd.Flags().Duration("max-time", 0, prettify(`
+	// 	The maximum total time the operation can take, in seconds. This is
+	// 	useful for preventing batch jobs that use grpcurl from hanging due to
+	// 	slow or bad network links or due to incorrect stream method usage.`))
+	// cmd.Flags().Uint("max-msg-sz", 4194304, prettify(`
+	// 	The maximum encoded size of a response message, in bytes, that grpcurl
+	// 	will accept. Defaults 4 MiB.`))
+	// cmd.Flags().Bool("emit-defaults", false, prettify(`
+	// 	Emit default values for JSON-encoded responses.`))
 
 	// Unused flags, might be implemented in the future
 	// rootCmd.Flags().StringSlice("protoset", nil, "")
@@ -118,16 +117,16 @@ func runRoot(cmd *cobra.Command, args []string) error {
 }
 
 type rootFlags struct {
-	verbose            bool     // persistent
-	proto              []string // persistent
-	data               string
-	format             string
-	allowUnknownFields bool
-	connectTimeout     time.Duration
-	formatError        bool
-	maxTime            time.Duration
-	maxMsgSz           uint
-	emitDefaults       bool
+	verbose bool     // persistent
+	proto   []string // persistent
+	data    string
+	format  string
+	// allowUnknownFields bool
+	// connectTimeout     time.Duration
+	// formatError        bool
+	// maxTime            time.Duration
+	// maxMsgSz           uint
+	// emitDefaults       bool
 }
 
 func parseRootFlags(cmd *cobra.Command) (*rootFlags, error) {
@@ -135,6 +134,10 @@ func parseRootFlags(cmd *cobra.Command) (*rootFlags, error) {
 
 	var err error
 	f.verbose, err = cmd.Flags().GetBool("verbose")
+	if err != nil {
+		return nil, err
+	}
+	f.proto, err = cmd.Flags().GetStringSlice("proto")
 	if err != nil {
 		return nil, err
 	}
@@ -146,38 +149,34 @@ func parseRootFlags(cmd *cobra.Command) (*rootFlags, error) {
 	if err != nil {
 		return nil, err
 	}
-	f.proto, err = cmd.Flags().GetStringSlice("proto")
-	if err != nil {
-		return nil, err
-	}
-	f.allowUnknownFields, err = cmd.Flags().GetBool("allow-unknown-fields")
-	if err != nil {
-		return nil, err
-	}
-	f.connectTimeout, err = cmd.Flags().GetDuration("connect-timeout")
-	if err != nil {
-		return nil, err
-	}
-	f.formatError, err = cmd.Flags().GetBool("format-error")
-	if err != nil {
-		return nil, err
-	}
-	f.maxTime, err = cmd.Flags().GetDuration("max-time")
-	if err != nil {
-		return nil, err
-	}
-	f.maxMsgSz, err = cmd.Flags().GetUint("max-msg-sz")
-	if err != nil {
-		return nil, err
-	}
-	f.emitDefaults, err = cmd.Flags().GetBool("emit-defaults")
-	if err != nil {
-		return nil, err
-	}
+	// f.allowUnknownFields, err = cmd.Flags().GetBool("allow-unknown-fields")
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// f.connectTimeout, err = cmd.Flags().GetDuration("connect-timeout")
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// f.formatError, err = cmd.Flags().GetBool("format-error")
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// f.maxTime, err = cmd.Flags().GetDuration("max-time")
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// f.maxMsgSz, err = cmd.Flags().GetUint("max-msg-sz")
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// f.emitDefaults, err = cmd.Flags().GetBool("emit-defaults")
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	if f.emitDefaults && f.format != "json" {
-		return nil, fmt.Errorf("flag --emit-defaults is only supported for --format=json")
-	}
+	// if f.emitDefaults && f.format != "json" {
+	// 	return nil, fmt.Errorf("flag --emit-defaults is only supported for --format=json")
+	// }
 
 	return f, nil
 }
