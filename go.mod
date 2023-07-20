@@ -4,12 +4,12 @@ go 1.20
 
 require (
 	github.com/containerd/ttrpc v1.2.2
+	github.com/fullstorydev/grpcurl v1.8.7
+	github.com/jhump/protoreflect v1.15.1
+	github.com/rogpeppe/go-internal v1.11.0
 	github.com/spf13/cobra v1.7.0
 	google.golang.org/grpc v1.56.1
 	google.golang.org/protobuf v1.31.0
-	github.com/jhump/protoreflect v1.15.1
-	github.com/rogpeppe/go-internal v1.11.0
-	github.com/fullstorydev/grpcurl v1.8.7
 )
 
 require (
