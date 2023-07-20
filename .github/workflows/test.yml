@@ -20,5 +20,14 @@ jobs:
         with:
           go-version: "stable"
 
+      - name: Install grpcurl
+        run: go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+
       - name: Run Go tests
         run: go test ./...
+
+      - name: Run testscript update
+        run: go test -u ./cmd/ttrpcurl
+
+      - name: Check diff
+        run: git diff --exit-code
