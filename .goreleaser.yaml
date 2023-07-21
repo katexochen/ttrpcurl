@@ -2,14 +2,19 @@ before:
   hooks:
     - go mod tidy
     - go generate ./...
-    - govulncheck -v ./...
+    - govulncheck ./...
     - actionlint
     - golangci-lint run
 
+gomod:
+  proxy: true
+
 builds:
-  - env:
+  - main: ./cmd/ttrpcurl
+    env:
       - CGO_ENABLED=0
-    flags: -trimpath
+    flags:
+      - -trimpath
     ldflags:
       - -s
       - -w
@@ -17,16 +22,23 @@ builds:
       - -X main.version={{.Version}}
       - -X main.commit={{.Commit}}
       - -X main.date={{.Date}}
+    goarch:
+      - amd64
+      - arm64
+      - s390x
+      - ppc64le
+      - riscv64
     goos:
       - linux
       - darwin
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+checksum:
+  disable: false
 
 archives:
   - format: tar.gz
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    format_overrides:
-      - goos: windows
-        format: zip
     builds_info:
       group: root
       owner: root
@@ -34,7 +46,6 @@ archives:
       mtime: 1970-01-01T00:00:00.000000001Z
     files:
       - LICENSE
-      - README.md
       - info:
           group: root
           owner: root
