@@ -63,6 +63,32 @@ exec ttrpcurl --proto product.proto describe product.ProductService.GetProducts
 ! stderr .+
 cmp stdout product.ProductService.GetProducts.out
 
+# describe with multiple protos
+exec ttrpcurl --proto a.proto --proto b.proto describe
+! stderr .+
+cmp stdout ab.services.out
+
+# describe AMethod with multiple protos
+exec ttrpcurl --proto a.proto,b.proto describe AService.AMethod
+! stderr .+
+cmp stdout ab.AService.AMethod.out
+
+# describe BMethod with multiple protos
+exec ttrpcurl --proto a.proto --proto b.proto describe BService.BMethod
+! stderr .+
+cmp stdout ab.BService.BMethod.out
+
+# describe A message with multiple protos
+exec ttrpcurl --proto a.proto --proto b.proto describe A
+! stderr .+
+cmp stdout ab.A.out
+
+# describe B message with multiple protos
+exec ttrpcurl --proto a.proto --proto b.proto describe B
+! stderr .+
+cmp stdout ab.B.out
+
+
 -- product.proto --
 syntax = "proto3";
 
@@ -103,6 +129,22 @@ message GetAdminsResponse {
 
 service AdminsService {
     rpc GetAdmins(GetAdminsRequest) returns (GetAdminsResponse) {};
+}
+-- a.proto --
+syntax = "proto3";
+
+message A {}
+
+service AService {
+    rpc AMethod (A) returns (A);
+}
+-- b.proto --
+syntax = "proto3";
+
+message B {}
+
+service BService {
+    rpc BMethod (B) returns (B);
 }
 -- product.services.out --
 product.ProductService is a service:
@@ -172,3 +214,26 @@ string Name = 2;
 product.GetProductResponse.Price is a field:
 // Price is the price of the product.
 int64 Price = 3;
+-- ab.services.out --
+AService is a service:
+service AService {
+  rpc AMethod ( .A ) returns ( .A );
+}
+BService is a service:
+service BService {
+  rpc BMethod ( .B ) returns ( .B );
+}
+-- ab.AService.AMethod.out --
+AService.AMethod is a method:
+rpc AMethod ( .A ) returns ( .A );
+-- ab.BService.BMethod.out --
+BService.BMethod is a method:
+rpc BMethod ( .B ) returns ( .B );
+-- ab.A.out --
+A is a message:
+message A {
+}
+-- ab.B.out --
+B is a message:
+message B {
+}

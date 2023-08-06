@@ -13,6 +13,11 @@ exec ttrpcurl --proto product.proto list product.AdminsService
 ! stderr .+
 cmp stdout product.list.product.AdminsService.out
 
+# list services with multiple proto files
+exec ttrpcurl --proto a.proto --proto b.proto list
+! stderr .+
+cmp stdout ab.list.out
+
 -- product.proto --
 syntax = "proto3";
 
@@ -50,6 +55,22 @@ message GetAdminsResponse {
 service AdminsService {
     rpc GetAdmins(GetAdminsRequest) returns (GetAdminsResponse) {};
 }
+-- a.proto --
+syntax = "proto3";
+
+message A {}
+
+service AService {
+    rpc AMethod (A) returns (A);
+}
+-- b.proto --
+syntax = "proto3";
+
+message B {}
+
+service BService {
+    rpc BMethod (B) returns (B);
+}
 -- product.list.out --
 product.AdminsService
 product.ProductService
@@ -58,3 +79,6 @@ product.ProductService.GetProduct
 product.ProductService.GetProducts
 -- product.list.product.AdminsService.out --
 product.AdminsService.GetAdmins
+-- ab.list.out --
+AService
+BService
