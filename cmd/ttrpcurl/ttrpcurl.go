@@ -17,10 +17,8 @@ func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ttrpcurl [flags] <socket> <method>",
 		Short: "Make ttrpc calls based on a proto file",
-		Args: cobra.MatchAll(
-			cobra.ExactArgs(2),
-		),
-		RunE: runRoot,
+		Args:  cobra.MatchAll(cobra.ExactArgs(2)),
+		RunE:  runRoot,
 	}
 
 	cmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose output.")
@@ -29,7 +27,9 @@ func newRootCmd() *cobra.Command {
 		use of the flag or by passing a comma separated list of strings.`))
 	// Imports will be resolved using the given -import-path flags.
 	// It is an error to use both -protoset and -proto flags.
-	must(cmd.MarkPersistentFlagRequired("proto"))
+	if protoFlagRequired {
+		must(cmd.MarkPersistentFlagRequired("proto"))
+	}
 
 	cmd.Flags().StringP("data", "d", "", prettify(`
 		Data for request contents. If the value is '@' then the request contents
@@ -97,10 +97,15 @@ func runRoot(cmd *cobra.Command, args []string) error {
 	}
 
 	parser := proto.NewParser()
-	source, err := parser.ParseFiles(flags.proto...)
+	fileDescs, err := parser.ParseFiles(flags.proto...)
 	if err != nil {
 		return fmt.Errorf("parsing proto files: %w", err)
 	}
+	includedFileDescs, err := parser.WalkAndParse(protoIncludeFS, protoIncludePath)
+	if err != nil {
+		return fmt.Errorf("parsing included proto files: %w", err)
+	}
+	source := proto.NewSource(fileDescs, includedFileDescs)
 
 	dialer := net.Dialer{}
 	conn, err := dialer.Dial("unix", args[0])

@@ -39,23 +39,28 @@ func runDescribe(cmd *cobra.Command, args []string) error {
 	}
 
 	parser := proto.NewParser()
-	source, err := parser.ParseFiles(flags.proto...)
+	fileDescs, err := parser.ParseFiles(flags.proto...)
 	if err != nil {
 		return fmt.Errorf("parsing proto files: %w", err)
 	}
+	includedFileDescs, err := parser.WalkAndParse(protoIncludeFS, protoIncludePath)
+	if err != nil {
+		return fmt.Errorf("parsing included proto files: %w", err)
+	}
+	source := proto.NewSource(fileDescs, includedFileDescs)
 
 	printer := proto.NewPrinter()
 
 	if len(args) == 0 {
 		services := source.GetServices()
 		for _, svc := range services {
-			proroSnip, err := printer.PrintProtoToString(svc)
+			protoSnip, err := printer.PrintProtoToString(svc)
 			if err != nil {
 				return fmt.Errorf("printing proto to string: %w", err)
 			}
 
 			fmt.Printf("%s is a service:\n", svc.GetFullyQualifiedName())
-			fmt.Printf("%s", proroSnip)
+			fmt.Printf("%s", protoSnip)
 		}
 		return nil
 	}
