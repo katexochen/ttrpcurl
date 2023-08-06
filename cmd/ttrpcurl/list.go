@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/katexochen/ttrpcurl/proto"
 	"github.com/spf13/cobra"
@@ -31,20 +30,20 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	parser := proto.NewParser()
-	source, err := parser.ParseFiles(flags.proto...)
+	fileDescs, err := parser.ParseFiles(flags.proto...)
 	if err != nil {
 		return fmt.Errorf("parsing proto files: %w", err)
 	}
+	includedFileDescs, err := parser.WalkAndParse(protoIncludeFS, protoIncludePath)
+	if err != nil {
+		return fmt.Errorf("parsing included proto files: %w", err)
+	}
+	source := proto.NewSource(fileDescs, includedFileDescs)
 
 	switch len(args) {
 	case 0:
-		var svcNames []string
 		for _, svc := range source.GetServices() {
-			svcNames = append(svcNames, svc.GetFullyQualifiedName())
-		}
-		sort.Strings(svcNames)
-		for _, svcName := range svcNames {
-			fmt.Println(svcName)
+			fmt.Println(svc.GetFullyQualifiedName())
 		}
 		return nil
 	case 1:
@@ -52,13 +51,8 @@ func runList(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("finding service: %w", err)
 		}
-		var methodNames []string
 		for _, method := range svc.GetMethods() {
-			methodNames = append(methodNames, method.GetFullyQualifiedName())
-		}
-		sort.Strings(methodNames)
-		for _, methodName := range methodNames {
-			fmt.Println(methodName)
+			fmt.Println(method.GetFullyQualifiedName())
 		}
 		return nil
 	default:

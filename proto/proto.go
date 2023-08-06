@@ -3,6 +3,10 @@ package proto
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/fs"
+	"path/filepath"
+	"sort"
 
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
@@ -12,31 +16,66 @@ import (
 )
 
 type Source struct {
-	fileDescs []*desc.FileDescriptor
+	fileDescs         []*desc.FileDescriptor
+	includedFileDescs []*desc.FileDescriptor
+}
+
+func NewSource(files, includedFiles []*desc.FileDescriptor) *Source {
+	return &Source{
+		fileDescs:         files,
+		includedFileDescs: includedFiles,
+	}
 }
 
 func (s *Source) GetServices() []*desc.ServiceDescriptor {
-	var services []*desc.ServiceDescriptor
-	for _, fileDesc := range s.fileDescs {
-		services = append(services, fileDesc.GetServices()...)
+	services := make(map[string]*desc.ServiceDescriptor, 0)
+
+	// Included files first, so that they can be overridden.
+	for _, fileDesc := range s.includedFileDescs {
+		for _, service := range fileDesc.GetServices() {
+			services[service.GetFullyQualifiedName()] = service
+		}
 	}
-	return services
+	for _, fileDesc := range s.fileDescs {
+		for _, service := range fileDesc.GetServices() {
+			services[service.GetFullyQualifiedName()] = service
+		}
+	}
+
+	return mapToSortedSlice(services)
 }
 
 func (s *Source) GetMessages() []*desc.MessageDescriptor {
-	var messages []*desc.MessageDescriptor
-	for _, fileDesc := range s.fileDescs {
-		messages = append(messages, fileDesc.GetMessageTypes()...)
+	messages := make(map[string]*desc.MessageDescriptor, 0)
+
+	// Included files first, so that they can be overridden.
+	for _, fileDesc := range s.includedFileDescs {
+		for _, message := range fileDesc.GetMessageTypes() {
+			messages[message.GetFullyQualifiedName()] = message
+		}
 	}
-	return messages
+	for _, fileDesc := range s.fileDescs {
+		for _, message := range fileDesc.GetMessageTypes() {
+			messages[message.GetFullyQualifiedName()] = message
+		}
+	}
+
+	return mapToSortedSlice(messages)
 }
 
 func (s *Source) FindSymbol(symbol string) (desc.Descriptor, error) {
+	// User-defined symbols first, so the are chosen over built-in symbols.
 	for _, fileDesc := range s.fileDescs {
 		if symbol := fileDesc.FindSymbol(symbol); symbol != nil {
 			return symbol, nil
 		}
 	}
+	for _, fileDesc := range s.includedFileDescs {
+		if symbol := fileDesc.FindSymbol(symbol); symbol != nil {
+			return symbol, nil
+		}
+	}
+
 	return nil, fmt.Errorf("symbol %s not found", symbol)
 }
 
@@ -53,12 +92,15 @@ func (s *Source) FindMethod(method string) (*desc.MethodDescriptor, error) {
 }
 
 func (s *Source) FindService(service string) (*desc.ServiceDescriptor, error) {
-	for _, fileDesc := range s.fileDescs {
-		if service := fileDesc.FindService(service); service != nil {
-			return service, nil
-		}
+	symbol, err := s.FindSymbol(service)
+	if err != nil {
+		return nil, err
 	}
-	return nil, fmt.Errorf("service %s not found", service)
+	serviceDesc, ok := symbol.(*desc.ServiceDescriptor)
+	if !ok {
+		return nil, fmt.Errorf("symbol %s is not a service", service)
+	}
+	return serviceDesc, nil
 }
 
 func (s *Source) FindMessage(message string) (*desc.MessageDescriptor, error) {
@@ -95,12 +137,31 @@ func NewParser() *Parser {
 	}
 }
 
-func (p *Parser) ParseFiles(filenames ...string) (*Source, error) {
-	desc, err := p.parser.ParseFiles(filenames...)
+func (p *Parser) ParseFiles(filenames ...string) ([]*desc.FileDescriptor, error) {
+	return p.parser.ParseFiles(filenames...)
+}
+
+func (p *Parser) WalkAndParse(fsys fs.FS, path string) ([]*desc.FileDescriptor, error) {
+	entries, err := fs.ReadDir(fsys, path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("reading directory: %w", err)
 	}
-	return &Source{fileDescs: desc}, nil
+
+	var filenames []string
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		filenames = append(filenames, entry.Name())
+	}
+
+	p.parser.Accessor = func(filename string) (io.ReadCloser, error) {
+		return fsys.Open(filepath.Join(path, filename))
+	}
+	defer func() { p.parser.Accessor = nil }()
+
+	return p.parser.ParseFiles(filenames...)
 }
 
 type Printer struct {
@@ -153,4 +214,19 @@ func (m Marshaler) Marshal(mes protoreflect.ProtoMessage) ([]byte, error) {
 	}
 
 	return b, nil
+}
+
+type fullyQualified interface {
+	GetFullyQualifiedName() string
+}
+
+func mapToSortedSlice[T fullyQualified](m map[string]T) []T {
+	s := make([]T, 0, len(m))
+	for _, v := range m {
+		s = append(s, v)
+	}
+	sort.Slice(s, func(i, j int) bool {
+		return s[i].GetFullyQualifiedName() < s[j].GetFullyQualifiedName()
+	})
+	return s
 }
