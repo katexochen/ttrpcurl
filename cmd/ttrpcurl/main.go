@@ -11,9 +11,12 @@ import (
 )
 
 var (
-	version = "0.0.0-dev"
-	commit  = "HEAD"
-	date    = "unknown"
+	title       = "ttrpcurl - Make ttrpc calls based on a proto file"
+	description = ""
+	version     = "0.0.0-dev"
+	edition     = ""
+	commit      = "HEAD"
+	date        = "unknown"
 )
 
 func main() {
@@ -35,13 +38,30 @@ func run() error {
 
 	rootCmd.Version = version
 	rootCmd.InitDefaultVersionFlag()
-	rootCmd.SetVersionTemplate(
-		fmt.Sprintf("ttrpcurl - Make ttrpc calls based on a proto file\n\nversion   %s\ncommit    %s\nbuilt at  %s\n", version, commit, date),
-	)
+	rootCmd.SetVersionTemplate(createVersionTemplate())
 
 	ctx, cancel := signalContext(context.Background(), os.Interrupt)
 	defer cancel()
 	return rootCmd.ExecuteContext(ctx)
+}
+
+func createVersionTemplate() string {
+	b := strings.Builder{}
+
+	b.WriteString(title)
+	b.WriteString("\n\n")
+	if description != "" {
+		b.WriteString(description)
+		b.WriteString("\n\n")
+	}
+	b.WriteString(fmt.Sprintf("version   %s\n", version))
+	if edition != "" {
+		b.WriteString(fmt.Sprintf("edition   %s\n", edition))
+	}
+	b.WriteString(fmt.Sprintf("commit    %s\n", commit))
+	b.WriteString(fmt.Sprintf("built at  %s\n", date))
+
+	return b.String()
 }
 
 func signalContext(ctx context.Context, sig os.Signal) (context.Context, context.CancelFunc) {
