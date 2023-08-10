@@ -29,7 +29,7 @@ jobs:
         uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version: "stable"
-      - uses: katexochen/go-tidy-check@2f5d75dbd503b372466fa9d8bc85710558b953c7 # v2.0.0
+      - uses: katexochen/go-tidy-check@427c8c07d3d83ab8d7290cad04ce71c12eab3674 # v2.0.1
 
   govulncheck:
     runs-on: ubuntu-latest
