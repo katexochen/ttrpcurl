@@ -1,6 +1,6 @@
 module github.com/katexochen/ttrpcurl
 
-go 1.20
+go 1.23
 
 require (
 	github.com/containerd/ttrpc v1.2.2
@@ -9,7 +9,7 @@ require (
 	github.com/rogpeppe/go-internal v1.11.0
 	github.com/spf13/cobra v1.7.0
 	google.golang.org/grpc v1.57.0
-	google.golang.org/protobuf v1.31.0
+	google.golang.org/protobuf v1.36.11
 )
 
 require (
